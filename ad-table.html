@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>美客多广告月度数据表</title>
+  <link rel="stylesheet" href="./ad-table.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">A</div>
+        <div>
+          <h1>广告数据表</h1>
+          <p>按产品型号 / 月度 / 原表结构</p>
+        </div>
+      </div>
+
+      <section class="side-section">
+        <label for="import-path">历史 Excel 导入</label>
+        <input id="import-file" type="file" accept=".xlsx,.xls,.xlsm" hidden />
+        <div class="file-picker-row">
+          <input id="import-file-name" type="text" placeholder="请选择 Excel 文件" readonly />
+          <button id="browse-file-btn" type="button">选择文件</button>
+        </div>
+        <textarea id="import-path" rows="3" placeholder="也可以粘贴完整 Excel 文件路径"></textarea>
+        <button id="import-btn" type="button">导入历史数据</button>
+        <p class="hint">后续新数据由外部软件直接写入数据库，页面会按数据库内容展示。</p>
+      </section>
+
+      <section class="side-section">
+        <label>产品型号</label>
+        <div class="product-actions">
+          <button id="add-product-btn" type="button">新增型号</button>
+          <button id="delete-product-btn" class="danger-btn" type="button">删除型号</button>
+        </div>
+        <div id="product-tabs" class="tab-list"></div>
+      </section>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Mercado Libre Ads</p>
+          <h2 id="title">月度广告数据表</h2>
+        </div>
+        <div id="month-tabs" class="month-tabs"></div>
+      </header>
+
+      <section class="summary" id="summary"></section>
+
+      <section class="table-panel profit-panel">
+        <div class="panel-head">
+          <h3>每日盈利表</h3>
+          <span>按型号统计：广告销量 + 自然销量</span>
+        </div>
+        <div class="table-wrap profit-wrap">
+          <table id="daily-profit-table"></table>
+        </div>
+      </section>
+
+      <section class="table-panel">
+        <div class="panel-head">
+          <h3 id="table-title">广告表</h3>
+          <span id="row-count">0 行</span>
+        </div>
+        <div class="table-wrap">
+          <table id="ad-table"></table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+  <script src="./ad-table.js"></script>
+</body>
+</html>

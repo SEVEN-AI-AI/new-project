@@ -1,0 +1,873 @@
+/* ═══════════════════════════════════════════════════════
+   美客多ERP系统 - 统一样式
+   广告模块作用域隔离 + 统一导航样式
+   ═══════════════════════════════════════════════════════ */
+
+/* ── 广告品牌色变量 ───────────────────────────────────── */
+:root {
+  --ad-brand: #7c3aed;
+  --ad-brand-soft: #f5f3ff;
+  --ad-brand-2: #6d28d9;
+  --ad-gradient: linear-gradient(135deg, #7c3aed, #2563eb);
+}
+
+/* ── 广告模块容器 ─────────────────────────────────────── */
+.ad-module {
+  display: none;
+}
+
+.ad-module.active {
+  display: grid;
+  gap: 20px;
+}
+
+.ad-table-layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 18px;
+}
+
+.ad-table-side {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+}
+
+.ad-table-side-section {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.ad-table-side-section label {
+  font-weight: 800;
+  color: #334155;
+  font-size: 13px;
+}
+
+.ad-table-side-section textarea {
+  min-height: 96px;
+}
+
+.ad-table-file-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.ad-table-file-row input {
+  min-width: 0;
+}
+
+.ad-table-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.ad-table-product-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.ad-table-product-actions .primary-btn,
+.ad-table-product-actions .danger-btn {
+  padding: 9px 10px;
+}
+
+.danger-btn {
+  border: 0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  background: var(--danger, #dc2626);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ad-table-tabs,
+.ad-table-month-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ad-table-tab {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 8px 10px;
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.ad-table-tab.active {
+  border-color: var(--ad-brand);
+  background: var(--ad-brand-soft);
+  color: var(--ad-brand);
+  font-weight: 800;
+}
+
+.ad-table-main {
+  min-width: 0;
+}
+
+.ad-table-topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.ad-table-topbar h3 {
+  font-size: 22px;
+}
+
+.ad-table-month-tabs {
+  justify-content: flex-end;
+}
+
+.ad-table-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(120px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.ad-profit-panel {
+  margin-bottom: 16px;
+}
+
+.ad-profit-wrap {
+  max-height: 280px;
+}
+
+.ad-table-wrap {
+  overflow: auto;
+  max-height: calc(100vh - 265px);
+}
+
+.ad-table-wrap table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.ad-table-wrap th,
+.ad-table-wrap td {
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 8px 10px;
+  min-width: 96px;
+  max-width: 240px;
+  font-size: 13px;
+  vertical-align: top;
+  background: #fff;
+}
+
+.ad-table-wrap th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #f5f3ff;
+  white-space: nowrap;
+}
+
+.ad-table-wrap td:first-child,
+.ad-table-wrap th:first-child {
+  position: sticky;
+  left: 0;
+}
+
+.ad-table-wrap td:first-child {
+  z-index: 1;
+  background: #fbfdff;
+  font-weight: 700;
+}
+
+.ad-table-wrap th:first-child {
+  z-index: 3;
+  background: #ede9fe;
+}
+
+.ad-table-wrap td.text-col {
+  min-width: 180px;
+  white-space: pre-wrap;
+}
+
+.ad-table-wrap td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.ad-table-wrap .empty {
+  min-width: 420px;
+  padding: 44px;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* ── 导航分组 ─────────────────────────────────────────── */
+.nav-group {
+  margin-bottom: 4px;
+}
+
+.nav-group-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+  padding: 12px 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+}
+
+.nav-group-toggle:hover {
+  background: #eef3fa;
+}
+
+.nav-group-toggle.active {
+  color: var(--blue);
+  background: var(--blue-soft);
+}
+
+.nav-group-toggle.active .nav-group-arrow {
+  transform: rotate(90deg);
+}
+
+.nav-group-arrow {
+  display: inline-block;
+  font-size: 12px;
+  transition: transform 0.2s ease;
+  width: 14px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.nav-group-text {
+  flex: 1;
+}
+
+.nav-group-items {
+  display: grid;
+  gap: 2px;
+  overflow: hidden;
+  max-height: 500px;
+  opacity: 1;
+  transition: max-height 0.3s ease, opacity 0.2s ease, margin 0.2s ease;
+  padding-left: 14px;
+}
+
+.nav-group-items.collapsed {
+  max-height: 0;
+  opacity: 0;
+  padding-left: 14px;
+  margin: 0;
+  pointer-events: none;
+}
+
+/* 广告分组 toggle 激活色 */
+.nav-group-toggle.active[data-group="ads"] {
+  color: var(--ad-brand);
+  background: var(--ad-brand-soft);
+}
+
+/* 广告模块导航按钮激活色 */
+.nav-btn.ad-nav-btn:hover,
+.nav-btn.ad-nav-btn.active {
+  color: var(--ad-brand);
+  background: var(--ad-brand-soft);
+}
+
+/* ── 广告模块内：CSS作用域覆盖 ─────────────────────────── */
+/* 解决与 styles.css 的类名冲突 */
+
+/* Avatar */
+.ad-module .avatar {
+  background: var(--ad-gradient);
+  box-shadow: 0 10px 22px rgba(124, 58, 237, 0.28);
+}
+
+/* Eyebrow 标签 */
+.ad-module .eyebrow {
+  color: var(--ad-brand);
+}
+
+/* KPI 卡片 - 紫色版 */
+.ad-module .kpi {
+  background:
+    linear-gradient(135deg, rgba(124, 58, 237, 0.08), rgba(37, 99, 235, 0.04) 55%, rgba(255, 255, 255, 0)),
+    #ffffff;
+  min-height: 120px;
+  padding: 18px;
+}
+
+.ad-module .kpi span {
+  color: #38516f;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.ad-module .kpi strong {
+  font-size: 28px;
+  line-height: 1.1;
+}
+
+.ad-module .kpi small {
+  margin-top: 4px;
+  font-size: 12px;
+}
+
+.ad-module .kpi::after {
+  background: rgba(124, 58, 237, 0.06);
+}
+
+.ad-module .kpi.acos-kpi .kpi-copy strong {
+  color: var(--danger, #dc2626);
+}
+
+.ad-module .kpi.acos-kpi .kpi-copy strong.good {
+  color: var(--ok, #059669);
+}
+
+/* KPI图标 */
+.ad-module .kpi-icon {
+  background: var(--ad-gradient);
+  box-shadow: 0 8px 18px rgba(124, 58, 237, 0.22);
+}
+
+/* Primary Button - 紫色版 */
+.ad-module .primary-btn {
+  background: var(--ad-gradient);
+  color: #fff;
+  font-weight: 700;
+  padding: 10px 22px;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+  border: 0;
+}
+
+.ad-module .primary-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(124, 58, 237, 0.35);
+  background: var(--ad-gradient);
+}
+
+/* Ghost Button - 广告版 */
+.ad-module .ghost-btn {
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  padding: 10px 22px;
+}
+
+.ad-module .ghost-btn:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
+/* Table Header - 紫色 */
+.ad-module th {
+  background: #f5f3ff;
+  font-size: 12px;
+}
+
+.ad-module tr:hover td {
+  background: #faf8ff;
+}
+
+/* Bar Fill - 紫色渐变 */
+.ad-module .bar-fill {
+  background: var(--ad-gradient);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
+  transition: width 0.6s ease;
+}
+
+.ad-module .bar-fill.sales-fill {
+  background: linear-gradient(90deg, #059669, #14b8a6);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2);
+}
+
+.ad-module .bar-row {
+  border: 1px solid #ede9fe;
+  background: linear-gradient(135deg, #ffffff, #faf8ff);
+}
+
+.ad-module .bar-track {
+  background: #ede9fe;
+}
+
+/* Bar Meta */
+.ad-module .bar-meta strong {
+  font-size: 14px;
+}
+
+.ad-module .bar-value {
+  font-size: 18px;
+}
+
+.ad-module .bar-value small {
+  font-size: 11px;
+}
+
+/* Focus Ring - 紫色 */
+.ad-module select:focus,
+.ad-module input:focus,
+.ad-module textarea:focus {
+  border-color: #c4b5fd;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+}
+
+/* ── 广告模块特有样式 ─────────────────────────────────── */
+
+/* 品牌标记 - 广告紫色 */
+.brand-mark.ad-mark {
+  background: var(--ad-gradient);
+  box-shadow: 0 6px 16px rgba(124, 58, 237, 0.3);
+}
+
+/* 可编辑单元格 */
+.ad-module td.editable {
+  cursor: pointer;
+  position: relative;
+}
+
+.ad-module td.editable:hover {
+  outline: 2px dashed #c4b5fd;
+  outline-offset: -2px;
+  border-radius: 4px;
+}
+
+.ad-module td.editable .cell-value {
+  min-height: 20px;
+  min-width: 40px;
+  display: block;
+}
+
+.ad-module td.editing {
+  padding: 4px;
+}
+
+.ad-module td.editing input,
+.ad-module td.editing textarea {
+  width: 100%;
+  min-height: 30px;
+  padding: 4px 8px;
+  border: 2px solid var(--ad-brand);
+  border-radius: 4px;
+  font-size: 13px;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+}
+
+.ad-module td.text-cell {
+  white-space: normal;
+  min-width: 100px;
+}
+
+.ad-module td.num-cell {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.ad-module td.calc-cell {
+  text-align: right;
+  color: var(--muted);
+  font-style: italic;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 月份/SKU Tab */
+.detail-toolbar,
+.weekly-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.sku-tabs,
+.month-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.tab-btn {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  color: #38516f;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  transition: all 0.15s;
+}
+
+.tab-btn:hover {
+  border-color: var(--ad-brand);
+  color: var(--ad-brand);
+}
+
+.tab-btn.active {
+  background: var(--ad-gradient);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+}
+
+/* SVG趋势图 */
+.trend-chart {
+  min-height: 320px;
+  position: relative;
+}
+
+.trend-chart svg {
+  width: 100%;
+  height: 100%;
+  min-height: 300px;
+}
+
+.trend-legend {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.trend-legend span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* 数据管理 */
+.manage-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.action-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 20px;
+  display: grid;
+  gap: 10px;
+}
+
+.action-card h4 {
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.action-card p {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 0;
+}
+
+.action-card input,
+.action-card select {
+  width: 100%;
+}
+
+.action-card .primary-btn {
+  width: 100%;
+  justify-self: start;
+}
+
+/* 导入区域增强 */
+.import-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.import-row input {
+  flex: 1;
+}
+
+.browse-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: #38516f;
+  padding: 0 14px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+
+.browse-btn:hover {
+  border-color: var(--ad-brand);
+  color: var(--ad-brand);
+  background: var(--ad-brand-soft);
+}
+
+/* 删除按钮 */
+.btn-delete {
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--danger);
+  cursor: pointer;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.btn-delete:hover {
+  background: #fef2f2;
+}
+
+/* Toast通知 */
+.toast {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  z-index: 1000;
+  padding: 14px 24px;
+  border-radius: 10px;
+  background: #0f172a;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.toast.hidden {
+  transform: translateY(20px);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.toast.success { background: var(--ok, #059669); }
+.toast.error { background: var(--danger, #dc2626); }
+
+/* 周报表格输入框 */
+.weekly-input {
+  border: 1px dashed var(--line);
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 13px;
+  width: 100%;
+  min-width: 120px;
+  resize: vertical;
+  min-height: 32px;
+  background: #faf8ff;
+  transition: all 0.15s;
+}
+
+.weekly-input:focus {
+  border-style: solid;
+  border-color: var(--ad-brand);
+  background: #fff;
+}
+
+/* 状态标签 - 广告版 */
+.ad-module .pill.ok { background: #ecfdf5; color: #059669; }
+.ad-module .pill.warn { background: #fffbeb; color: #d97706; }
+.ad-module .pill.danger { background: #fef2f2; color: #dc2626; }
+
+.danger-text { color: #dc2626 !important; font-weight: 700; }
+
+/* Panel full-width */
+.panel.full-width { overflow: hidden; }
+
+/* Nav Icon */
+.nav-icon {
+  font-size: 16px;
+  width: 20px;
+  text-align: center;
+}
+
+/* Header 时间 */
+.header-time {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Sidebar footer */
+.sidebar-footer {
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+  margin-top: auto;
+}
+
+.refresh-btn {
+  width: 100%;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  padding: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.15s;
+}
+
+.refresh-btn:hover {
+  color: var(--ad-brand);
+  border-color: var(--ad-brand);
+  background: var(--ad-brand-soft);
+}
+
+/* 广告模块内 sidebar 支持 flex 布局 */
+.ad-module-active .sidebar {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── 响应式 ────────────────────────────────────────────── */
+@media (max-width: 1200px) {
+  .manage-actions { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 900px) {
+  .ad-module .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .split { grid-template-columns: 1fr; }
+}
+
+
+/* Keep first-level menu groups compact when modules switch. */
+.nav {
+  align-content: start;
+  align-items: stretch;
+}
+
+.nav-group,
+.nav-group-items {
+  align-self: start;
+}
+
+.nav-group-items {
+  max-height: none;
+}
+
+.nav-group-items.collapsed {
+  max-height: 0;
+}
+
+.bar-fill.danger-fill {
+  background: linear-gradient(90deg, #f97316, #ef4444);
+}
+
+
+/* Data table alignment: keep headers and body cells locked to the same grid. */
+.ad-module .table-wrap table,
+.ad-module #latest-table,
+.ad-module #profit-table,
+.ad-module #detail-table,
+.ad-module #weekly-table,
+.ad-module #manage-table {
+  table-layout: fixed;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ad-module .table-wrap th,
+.ad-module .table-wrap td {
+  box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ad-module .table-wrap th.num-cell,
+.ad-module .table-wrap td.num-cell,
+.ad-module .table-wrap th.calc-cell,
+.ad-module .table-wrap td.calc-cell {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.ad-module .table-wrap th.text-cell,
+.ad-module .table-wrap td.text-cell {
+  text-align: left;
+  white-space: normal;
+  min-width: 150px;
+}
+
+.ad-module #profit-table { min-width: 760px; }
+.ad-module #profit-table th:nth-child(1),
+.ad-module #profit-table td:nth-child(1) { width: 120px; }
+.ad-module #profit-table th:nth-child(2),
+.ad-module #profit-table td:nth-child(2) { width: 100px; }
+.ad-module #profit-table th:nth-child(3),
+.ad-module #profit-table td:nth-child(3),
+.ad-module #profit-table th:nth-child(4),
+.ad-module #profit-table td:nth-child(4),
+.ad-module #profit-table th:nth-child(5),
+.ad-module #profit-table td:nth-child(5),
+.ad-module #profit-table th:nth-child(6),
+.ad-module #profit-table td:nth-child(6) { width: 135px; }
+
+.ad-module #detail-table,
+.ad-module #manage-table { min-width: 1680px; }
+.ad-module #detail-table th:nth-child(1),
+.ad-module #detail-table td:nth-child(1),
+.ad-module #manage-table th:nth-child(1),
+.ad-module #manage-table td:nth-child(1) { width: 92px; }
+.ad-module #detail-table th:nth-child(n+2):nth-child(-n+13),
+.ad-module #detail-table td:nth-child(n+2):nth-child(-n+13),
+.ad-module #manage-table th:nth-child(n+2):nth-child(-n+13),
+.ad-module #manage-table td:nth-child(n+2):nth-child(-n+13) { width: 96px; }
+.ad-module #detail-table th:nth-child(n+14),
+.ad-module #detail-table td:nth-child(n+14),
+.ad-module #manage-table th:nth-child(n+14),
+.ad-module #manage-table td:nth-child(n+14) { width: 170px; }
+
+.ad-module #latest-table { min-width: 1120px; }
+.ad-module #latest-table th,
+.ad-module #latest-table td { width: 100px; }
+.ad-module #latest-table th:first-child,
+.ad-module #latest-table td:first-child { width: 110px; }
+
+.ad-module #weekly-table { min-width: 980px; }
+.ad-module #weekly-table th:nth-child(1),
+.ad-module #weekly-table td:nth-child(1) { width: 86px; }
+.ad-module #weekly-table th:nth-child(2),
+.ad-module #weekly-table td:nth-child(2) { width: 150px; }
+.ad-module #weekly-table th:nth-child(n+3):nth-child(-n+6),
+.ad-module #weekly-table td:nth-child(n+3):nth-child(-n+6) { width: 120px; }
+.ad-module #weekly-table th:nth-child(n+7),
+.ad-module #weekly-table td:nth-child(n+7) { width: 190px; }

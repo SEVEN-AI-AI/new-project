@@ -1,0 +1,137 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>&#x7F8E;&#x5BA2;&#x591A;&#x5E7F;&#x544A;&#x7BA1;&#x7406;&#x7CFB;&#x7EDF;</title>
+  <link rel="stylesheet" href="./ad-system.css?v=2026051903" />
+</head>
+<body>
+  <div class="shell">
+    <header class="app-header">
+      <div class="search-box">
+        <span class="search-icon">&#x2315;</span>
+        <input id="global-search" type="search" placeholder="&#x641C;&#x7D22;SKU&#x3001;&#x65E5;&#x671F;..." />
+      </div>
+      <div class="header-right">
+        <span class="header-time" id="header-time"></span>
+        <div class="avatar">A</div>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark ad-mark">A</div>
+          <div>
+            <h1>&#x7F8E;&#x5BA2;&#x591A;&#x5E7F;&#x544A;&#x7CFB;&#x7EDF;</h1>
+            <p>Dashboard &middot; Profit &middot; Diagnosis</p>
+          </div>
+        </div>
+        <nav class="nav">
+          <button class="nav-btn active" data-view="ad-dashboard"><span class="nav-icon">&#9776;</span> &#x5E97;&#x94FA;&#x7ECF;&#x8425;&#x603B;&#x89C8;</button>
+          <button class="nav-btn" data-view="ad-profit"><span class="nav-icon">&#9638;</span> &#x6BCF;&#x65E5;&#x76C8;&#x5229;&#x8868;</button>
+          <button class="nav-btn" data-view="ad-detail"><span class="nav-icon">&#9783;</span> &#x5355;&#x54C1;&#x5E7F;&#x544A;&#x8BCA;&#x65AD;</button>
+          <button class="nav-btn" data-view="ad-manage"><span class="nav-icon">&#9881;</span> &#x6570;&#x636E;&#x5BFC;&#x5165;</button>
+        </nav>
+        <div class="sidebar-footer">
+          <button class="refresh-btn" id="refresh-data" title="&#x5237;&#x65B0;&#x6570;&#x636E;">&#x21bb; &#x5237;&#x65B0;&#x6570;&#x636E;</button>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="page-head">
+          <div>
+            <p class="eyebrow" id="page-eyebrow">Mercado Libre Ads</p>
+            <h2 id="view-title">&#x5E97;&#x94FA;&#x7ECF;&#x8425;&#x603B;&#x89C8;</h2>
+          </div>
+          <div class="page-tools">
+            <div class="filters ad-filters" id="ad-filters">
+              <select id="filter-store" aria-label="&#x6309;&#x5E97;&#x94FA;"></select>
+              <select id="filter-sku" aria-label="&#x6309;SKU"></select>
+              <select id="filter-range" aria-label="&#x65F6;&#x95F4;&#x6BB5;">
+                <option value="today">&#x4ECA;&#x65E5;</option>
+                <option value="7" selected>&#x8FD1;7&#x5929;</option>
+                <option value="15">&#x8FD1;15&#x5929;</option>
+                <option value="30">30&#x5929;</option>
+                <option value="recent30">&#x8FD1;30&#x5929;</option>
+                <option value="month">&#x6309;&#x6708;&#x4EFD;</option>
+                <option value="custom">&#x81EA;&#x5B9A;&#x4E49;</option>
+              </select>
+              <input id="filter-start" type="date" aria-label="&#x5F00;&#x59CB;&#x65E5;&#x671F;" hidden />
+              <input id="filter-end" type="date" aria-label="&#x7ED3;&#x675F;&#x65E5;&#x671F;" hidden />
+              <select id="filter-month" aria-label="&#x6309;&#x6708;&#x4EFD;"><option value="">&#x5168;&#x90E8;&#x6708;&#x4EFD;</option></select>
+            </div>
+          </div>
+        </header>
+
+        <section id="ad-dashboard" class="view active">
+          <div class="kpi-grid" id="dashboard-kpis"></div>
+          <div class="split">
+            <section class="panel">
+              <div class="panel-head"><h3>&#x6BCF;&#x65E5;&#x82B1;&#x8D39;&#x8D8B;&#x52BF;&#xFF08;US&#xFF09;</h3><span>&#x6309;&#x5168;&#x5C40;&#x7B5B;&#x9009;&#x6761;&#x4EF6;&#x5C55;&#x793A;&#x6BCF;&#x65E5;&#x5E7F;&#x544A;&#x82B1;&#x8D39;</span></div>
+              <div id="sku-spend-chart" class="chart-area"></div>
+            </section>
+            <section class="panel">
+              <div class="panel-head"><h3>&#x6BCF;&#x65E5;&#x9500;&#x91CF;&#x8D8B;&#x52BF;</h3><span>&#x6309;&#x5168;&#x5C40;&#x7B5B;&#x9009;&#x6761;&#x4EF6;&#x5C55;&#x793A;&#x81EA;&#x7136;+&#x5E7F;&#x544A;&#x9500;&#x91CF;</span></div>
+              <div id="sku-sales-chart" class="chart-area"></div>
+            </section>
+          </div>
+          <section class="panel">
+            <div class="panel-head"><h3>&#x5E97;&#x94FA;&#x8BBF;&#x95EE;&#x91CF;</h3><span>&#x6309;&#x5F53;&#x524D;&#x7B5B;&#x9009;&#x6761;&#x4EF6;&#x6C47;&#x603B;&#x6BCF;&#x65E5;&#x8BBF;&#x95EE;&#x8868;&#x73B0;</span></div>
+            <div class="table-wrap"><table id="latest-table"></table></div>
+          </section>
+        </section>
+
+        <section id="ad-profit" class="view">
+          <div class="kpi-grid compact" id="profit-kpis"></div>
+          <div class="split profit-visuals">
+            <section class="panel">
+              <div class="panel-head profit-trend-head">
+                <div><h3>&#x5F53;&#x6708;&#x76C8;&#x5229;&#x8D8B;&#x52BF;</h3><span id="profit-chart-note">&#x6309;SKU&#x6C47;&#x603B;&#x5C55;&#x793A;&#x4ECA;&#x65E5;&#x76C8;&#x4E8F;(US)</span></div>
+                <div class="segmented-toggle" id="profit-chart-toggle" aria-label="profit chart mode">
+                  <button type="button" data-mode="summary" class="active">&#x6C47;&#x603B;</button>
+                  <button type="button" data-mode="detail">&#x660E;&#x7EC6;</button>
+                </div>
+              </div>
+              <div id="profit-chart" class="chart-area trend-chart"></div>
+            </section>
+            <section class="panel">
+              <div class="panel-head"><h3>TOP10&#x76C8;&#x5229;SKU</h3><span>&#x6309;&#x76C8;&#x5229;&#x91D1;&#x989D;&#x6392;&#x5E8F;(US)</span></div>
+              <div id="profit-top-chart" class="chart-area trend-chart"></div>
+            </section>
+          </div>
+          <section class="panel full-width">
+            <div class="panel-head"><h3>&#x6BCF;&#x65E5;&#x76C8;&#x5229;&#x660E;&#x7EC6;</h3><span>&#x53CC;&#x51FB;&#x5355;&#x4EF6;&#x5229;&#x6DA6;&#x53EF;&#x624B;&#x52A8;&#x4FEE;&#x6B63;</span></div>
+            <div class="table-wrap detail-table-wrap"><table id="profit-table"></table></div>
+          </section>
+        </section>
+
+        <section id="ad-detail" class="view">
+          <div class="detail-toolbar"><div class="sku-tabs" id="sku-tabs"></div><div class="month-tabs" id="detail-month-tabs"></div></div>
+          <section class="panel full-width"><div class="table-wrap detail-table-wrap"><table id="detail-table"></table></div></section>
+        </section>
+
+        <section id="ad-weekly" class="view">
+          <div class="weekly-toolbar"><div class="sku-tabs" id="weekly-sku-tabs"></div><div class="month-tabs" id="weekly-month-tabs"></div></div>
+          <div class="kpi-grid compact" id="weekly-kpis"></div>
+          <section class="panel"><div class="panel-head"><h3>&#x81EA;&#x7136;&#x5468;&#x6C47;&#x603B;</h3><span>&#x66DD;&#x5149;/&#x70B9;&#x51FB;/&#x82B1;&#x8D39;&#x6309;&#x5929;&#x53D8;&#x5316;</span></div><div class="table-wrap"><table id="weekly-table"></table></div></section>
+          <section class="panel"><div class="panel-head"><h3>&#x6BCF;&#x65E5;&#x8D8B;&#x52BF;</h3><span>&#x66DD;&#x5149;/&#x70B9;&#x51FB;/&#x82B1;&#x8D39;&#x6309;&#x5929;&#x53D8;&#x5316;</span></div><div id="trend-chart" class="chart-area trend-chart"></div></section>
+        </section>
+
+        <section id="ad-manage" class="view">
+          <div class="manage-actions">
+            <div class="action-card"><h4>Excel&#x5BFC;&#x5165;</h4><p>&#x4ECE;&#x5E7F;&#x544A;&#x6570;&#x636E;Excel&#x6587;&#x4EF6;&#x5BFC;&#x5165;&#x5230;&#x6570;&#x636E;&#x5E93;</p><div class="import-row"><input type="text" id="import-path" placeholder="Excel&#x6587;&#x4EF6;&#x8DEF;&#x5F84;" /><button class="browse-btn" id="btn-browse" type="button">&#128194; &#x6D4F;&#x89C8;</button></div><input type="file" id="import-file" accept=".xlsx,.xls" style="display:none" /><button class="primary-btn" id="btn-import">&#x5BFC;&#x5165;&#x6570;&#x636E;</button></div>
+            <div class="action-card"><h4>Excel&#x5BFC;&#x51FA;</h4><p>&#x5BFC;&#x51FA;&#x6307;&#x5B9A;&#x6708;&#x4EFD;&#x7684;&#x5E7F;&#x544A;&#x6570;&#x636E;</p><select id="export-month"></select><button class="primary-btn" id="btn-export">&#x5BFC;&#x51FA;&#x6570;&#x636E;</button></div>
+            <div class="action-card"><h4>&#x91CD;&#x7B97;&#x5468;&#x6C47;&#x603B;</h4><p>&#x6839;&#x636E;&#x6BCF;&#x65E5;&#x6570;&#x636E;&#x91CD;&#x65B0;&#x8BA1;&#x7B97;</p><select id="calc-month"></select><button class="primary-btn" id="btn-calc">&#x91CD;&#x65B0;&#x8BA1;&#x7B97;</button></div>
+          </div>
+          <section class="panel"><div class="panel-head"><h3>&#x6309;&#x578B;&#x53F7;&#x67E5;&#x770B;&#x5BFC;&#x5165;&#x6570;&#x636E;</h3><span id="data-count">&#x5171; 0 &#x6761;&#x8BB0;&#x5F55;</span></div><div class="detail-toolbar"><div class="sku-tabs" id="manage-sku-tabs"></div><div class="month-tabs" id="manage-month-tabs"></div></div><div class="table-wrap detail-table-wrap"><table id="manage-table"></table></div></section>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+  <script src="./ad-system.js?v=2026051903"></script>
+</body>
+</html>

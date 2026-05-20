@@ -1,0 +1,393 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>美客多ERP系统</title>
+  <link rel="stylesheet" href="./styles.css?v=202605110001" />
+  <link rel="stylesheet" href="./erp.css" />
+</head>
+<body>
+  <div class="shell">
+    <!-- 顶部栏 -->
+    <header class="app-header">
+      <div class="search-box">
+        <span class="search-icon">&#x2315;</span>
+        <input id="global-search" type="search" placeholder="搜索物流单号、SKU、日期..." />
+      </div>
+      <div class="header-right">
+        <span class="header-time" id="header-time"></span>
+        <div class="avatar" id="header-avatar">E</div>
+      </div>
+    </header>
+
+    <div class="layout">
+      <!-- 统一侧边栏 -->
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">E</div>
+          <div>
+            <h1>美客多ERP系统</h1>
+            <p>数据总览 &middot; 物流 &middot; 广告</p>
+          </div>
+        </div>
+        <nav class="nav">
+          <div class="nav-group" data-group="logistics">
+            <button class="nav-group-toggle" data-group="logistics">
+              <span class="nav-group-arrow">&#9656;</span>
+              <span class="nav-group-text">物流管理</span>
+            </button>
+            <div class="nav-group-items collapsed">
+              <button class="nav-btn active" data-view="dashboard">
+                <span class="nav-icon">&#9776;</span> 全链路总览
+              </button>
+              <button class="nav-btn" data-view="create">
+                <span class="nav-icon">&#9783;</span> 创建货件
+              </button>
+              <button class="nav-btn" data-view="tracking">
+                <span class="nav-icon">&#9656;</span> 物流时效
+              </button>
+              <button class="nav-btn" data-view="costs">
+                <span class="nav-icon">&#9733;</span> 头程费用
+              </button>
+              <button class="nav-btn" data-view="providers">
+                <span class="nav-icon">&#9881;</span> 服务商分析
+              </button>
+              <button class="nav-btn" data-view="alerts">
+                <span class="nav-icon">&#9888;</span> 延误预警
+              </button>
+            </div>
+          </div>
+          <div class="nav-group" data-group="ads">
+            <button class="nav-group-toggle" data-group="ads">
+              <span class="nav-group-arrow">&#9656;</span>
+              <span class="nav-group-text">广告管理</span>
+            </button>
+            <div class="nav-group-items collapsed">
+              <button class="nav-btn ad-nav-btn" data-view="ad-dashboard">
+                <span class="nav-icon">&#9776;</span> &#24215;&#38138;&#32463;&#33829;&#24635;&#35272;
+              </button>
+              <button class="nav-btn ad-nav-btn" data-view="ad-profit">
+                <span class="nav-icon">&#9638;</span> &#27599;&#26085;&#30408;&#21033;&#34920;
+              </button>
+              <button class="nav-btn ad-nav-btn" data-view="ad-detail">
+                <span class="nav-icon">&#9783;</span> &#21333;&#21697;&#24191;&#21578;&#35786;&#26029;
+              </button>
+              <button class="nav-btn ad-nav-btn" data-view="ad-manage">
+                <span class="nav-icon">&#9881;</span> &#25968;&#25454;&#23548;&#20837;
+              </button>
+
+
+
+            </div>
+          </div>
+        </nav>
+        <div class="sidebar-footer">
+          <button class="refresh-btn" id="refresh-data" title="刷新数据">&#x21bb; 刷新数据</button>
+        </div>
+      </aside>
+
+      <!-- 主内容区 -->
+      <main class="main">
+        <header class="page-head">
+          <div>
+            <p class="eyebrow" id="page-eyebrow">美客多ERP</p>
+            <div class="title-row">
+              <h2 id="view-title">全链路经营总览</h2>
+              <button class="ghost-btn back-list-btn" type="button" id="back-to-list" data-view-target="tracking" hidden>返回</button>
+            </div>
+          </div>
+          <div class="page-tools" id="page-tools">
+            <!-- 物流筛选器 -->
+            <div class="filters logistics-filters" id="logistics-filters">
+              <select id="platform-filter" aria-label="平台筛选"></select>
+              <select id="store-filter" aria-label="店铺筛选"></select>
+              <select id="provider-filter" aria-label="服务商筛选"></select>
+              <select id="status-filter" aria-label="状态筛选">
+                <option value="all">全部状态</option>
+                <option value="delayed">已延误</option>
+                <option value="risk">在途风险</option>
+                <option value="normal">正常/完成</option>
+              </select>
+            </div>
+            <!-- 广告筛选器 -->
+            <div class="filters ad-filters" id="ad-filters" style="display:none">
+              <select id="filter-store" aria-label="按店铺"></select>
+              <select id="filter-sku" aria-label="按SKU"></select>
+              <select id="filter-range" aria-label="时间段">
+                <option value="today">今日</option>
+                <option value="7" selected>近7天</option>
+                <option value="15">近15天</option>
+                <option value="30">30天</option>
+                <option value="recent30">近30天</option>
+                <option value="month">按月份</option>
+                <option value="custom">自定义</option>
+              </select>
+              <input id="filter-start" type="date" aria-label="开始日期" hidden />
+              <input id="filter-end" type="date" aria-label="结束日期" hidden />
+              <select id="filter-month" aria-label="按月份">
+                <option value="">全部月份</option>
+              </select>
+            </div>
+          </div>
+        </header>
+
+        <!-- ═══ 物流模块 ═══ -->
+        <section id="dashboard" class="view logistics-module active">
+          <div class="kpi-grid" id="kpi-grid"></div>
+          <div class="split">
+            <section class="panel">
+              <div class="panel-head"><h3>服务商表现</h3><span>按平均全链路时效排序 <button class="tip" type="button" aria-label="计算逻辑">!</button><em class="tip-pop">仅统计当前筛选下已到海外仓的货件；平均全链路时效 = 每票(海外仓到货日期 - 送仓日期)的平均值，数值越小代表越快。</em></span></div>
+              <div id="provider-bars" class="bar-list"></div>
+            </section>
+            <section class="panel">
+              <div class="panel-head"><h3>渠道费用对比</h3><span>按单件平均头程费排序 <button class="tip" type="button" aria-label="计算逻辑">!</button><em class="tip-pop">按当前货件逐票计算；单件平均头程费 = 单票总费用 / 单票总数量，再按渠道取平均值并从高到低展示。</em></span></div>
+              <div id="channel-bars" class="bar-list"></div>
+            </section>
+          </div>
+          <section class="panel">
+            <div class="panel-head"><h3>近期重点票</h3><span>延误、在途和高费用优先</span></div>
+            <div class="table-wrap"><table id="priority-table"></table></div>
+          </section>
+        </section>
+
+        <section id="create" class="view logistics-module">
+          <div class="form-page">
+            <div class="form-main">
+              <form id="shipment-form">
+                <input name="recordId" type="hidden" />
+                <section class="form-panel">
+                  <div class="section-title"><span>&#9633;</span><h3>基本信息</h3></div>
+                  <div class="form-grid">
+                    <label data-field-label="服务商">服务商 *<input name="provider" list="provider-options" placeholder="选择或输入服务商" required /></label>
+                    <label data-field-label="物流渠道">物流渠道<input name="channel" list="channel-options" placeholder="选择或输入渠道" /></label>
+                    <label data-field-label="物流商单号">物流商单号 *<input name="trackingNo" placeholder="请输入物流商单号" required /></label>
+                    <label data-field-label="平台">平台 *<input name="platform" list="platform-options" placeholder="选择或输入平台" required /></label>
+                    <label data-field-label="店铺">店铺<input name="store" list="store-options" placeholder="选择或输入店铺" /></label>
+                    <label data-field-label="平台货件号">平台货件号<input name="platformShipmentNo" placeholder="请输入平台货件号" /></label>
+                    <label data-field-label="下单日期">下单日期<input name="orderDate" type="text" data-date-input readonly placeholder="选择日期" /></label>
+                    <label data-field-label="状态">状态
+                      <select name="shipmentStatus">
+                        <option value="在途">在途</option>
+                        <option value="完成">完成</option>
+                        <option value="延误">延误</option>
+                      </select>
+                    </label>
+                  </div>
+                </section>
+                <section class="form-panel">
+                  <div class="section-title"><span>&#9632;</span><h3>时间节点</h3></div>
+                  <div class="form-grid">
+                    <label data-field-label="送仓日期">送仓日期<div class="date-control"><input name="warehouseDate" type="text" data-date-input readonly placeholder="选择日期" /><button type="button" data-clear="warehouseDate">&times;</button></div></label>
+                    <label data-field-label="实际开船日期">实际开船日期<div class="date-control"><input name="departureDate" type="text" data-date-input readonly placeholder="选择日期" /><button type="button" data-clear="departureDate">&times;</button></div></label>
+                    <label data-field-label="实际到港日期">实际到港日期<div class="date-control"><input name="portArrivalDate" type="text" data-date-input readonly placeholder="选择日期" /><button type="button" data-clear="portArrivalDate">&times;</button></div></label>
+                    <label data-field-label="卡派时间">卡派时间<div class="date-control"><input name="truckDate" type="text" data-date-input readonly placeholder="选择日期" /><button type="button" data-clear="truckDate">&times;</button></div></label>
+                    <label data-field-label="海外仓到货时间">海外仓到货时间<div class="date-control"><input name="overseasArrivalDate" type="text" data-date-input readonly placeholder="选择日期" /><button type="button" data-clear="overseasArrivalDate">&times;</button></div></label>
+                    <label data-field-label="服务商承诺时效">服务商承诺时效<input name="promisedDays" type="number" min="0" step="1" placeholder="例如 40" /></label>
+                  </div>
+                </section>
+                <section class="form-panel">
+                  <div class="section-title"><span>&#9670;</span><h3>货量与费用</h3></div>
+                  <div class="form-grid">
+                    <label data-field-label="送仓件数">送仓件数<input name="pieces" type="number" min="0" step="1" /></label>
+                    <label data-field-label="总数量">总数量<input name="quantity" type="number" min="0" step="1" /></label>
+                    <label data-field-label="体积(CBM)">体积(CBM)<input name="volume" type="number" min="0" step="0.001" /></label>
+                    <label data-field-label="实重(KG)">实重(KG)<input name="weight" type="number" min="0" step="0.01" /></label>
+                    <label data-field-label="费用(￥)">费用(￥)<input name="fee" type="number" min="0" step="0.01" /></label>
+                    <label class="wide" data-field-label="备注">备注<textarea name="remark" rows="4" placeholder="填写异常原因、延误说明或跟进记录"></textarea></label>
+                  </div>
+                </section>
+                <div class="form-actions">
+                  <button class="ghost-btn" type="button" id="cancel-edit">取消编辑</button>
+                  <button class="ghost-btn" type="reset">清空</button>
+                  <button class="primary-btn" type="submit" id="save-btn">保存记录</button>
+                </div>
+              </form>
+            </div>
+            <aside class="calc-panel">
+              <h3>实时计算</h3>
+              <div class="calc-list">
+                <div><span>等待开船天数</span><strong id="calc-wait">--</strong><small>Waiting for Departure</small></div>
+                <div><span>实际头程天数</span><strong id="calc-first">--</strong><small>Actual First Leg</small></div>
+                <div><span>转换天数</span><strong id="calc-transfer">--</strong><small>Transfer Days</small></div>
+                <div><span>尾程天数</span><strong id="calc-last">--</strong><small>Last Mile Days</small></div>
+                <div><span>开船-全链路</span><strong id="calc-from-departure">--</strong><small>From Departure</small></div>
+                <div><span>全链路时效</span><strong id="calc-total">--</strong><small>Total Full Chain</small></div>
+                <div><span>承诺差异</span><strong id="calc-diff">--</strong><small>Actual - Promise</small></div>
+              </div>
+            </aside>
+          </div>
+          <datalist id="platform-options"></datalist>
+          <datalist id="provider-options"></datalist>
+          <datalist id="store-options"></datalist>
+          <datalist id="channel-options"></datalist>
+        </section>
+
+        <section id="tracking" class="view logistics-module">
+          <section class="panel">
+            <div class="panel-head"><h3>物流时效追踪</h3><span>点击单号可进入编辑</span></div>
+            <div class="table-wrap"><table id="tracking-table"></table></div>
+          </section>
+        </section>
+
+        <section id="costs" class="view logistics-module">
+          <div class="kpi-grid compact" id="cost-kpis"></div>
+          <section class="panel">
+            <div class="panel-head"><h3>头程费用核算</h3><span>搜索单号会展示关联费用</span></div>
+            <div class="table-wrap"><table id="cost-table"></table></div>
+          </section>
+        </section>
+
+        <section id="providers" class="view logistics-module">
+          <section class="panel">
+            <div class="panel-head"><h3>服务商表现分析</h3><span>搜索单号时自动聚焦关联服务商</span></div>
+            <div class="table-wrap"><table id="provider-table"></table></div>
+          </section>
+        </section>
+
+        <section id="alerts" class="view logistics-module">
+          <section class="panel warning-panel">
+            <div class="panel-head"><h3>延误预警</h3><span>实际超承诺或在途超期</span></div>
+            <div id="alert-list" class="alert-list"></div>
+          </section>
+        </section>
+
+        <!-- ═══ 广告模块 ═══ -->
+        <div class="ad-module" id="ad-module">
+          <!-- 视图1：广告总览 -->
+          <section id="ad-dashboard" class="view">
+            <div class="kpi-grid" id="dashboard-kpis"></div>
+            <div class="split">
+              <section class="panel">
+                <div class="panel-head chart-panel-head"><div class="panel-title-copy"><h3>&#x6BCF;&#x65E5;&#x82B1;&#x8D39;&#x8D8B;&#x52BF;&#xFF08;US&#xFF09;</h3><p class="panel-subtitle">&#x6309;&#x5168;&#x5C40;&#x7B5B;&#x9009;&#x6761;&#x4EF6;&#x5C55;&#x793A;&#x6BCF;&#x65E5;&#x5E7F;&#x544A;&#x82B1;&#x8D39;</p></div><div id="sku-spend-toggle" class="chart-head-actions"></div></div>
+                <div id="sku-spend-chart" class="chart-area"></div>
+              </section>
+              <section class="panel">
+                <div class="panel-head chart-panel-head"><div class="panel-title-copy"><h3>&#x6BCF;&#x65E5;&#x9500;&#x91CF;&#x8D8B;&#x52BF;</h3><p class="panel-subtitle">&#x6309;&#x5168;&#x5C40;&#x7B5B;&#x9009;&#x6761;&#x4EF6;&#x5C55;&#x793A;&#x81EA;&#x7136;+&#x5E7F;&#x544A;&#x9500;&#x91CF;</p></div></div>
+                <div id="sku-sales-chart" class="chart-area"></div>
+              </section>
+            </div>
+            <section class="panel">
+              <div class="panel-head"><h3>店铺访问量</h3><span>按当前筛选条件汇总每日访问表现</span></div>
+              <div class="table-wrap"><table id="latest-table"></table></div>
+            </section>
+          </section>
+
+          <!-- 视图2：每日盈利表 -->
+          <section id="ad-profit" class="view">
+            <div class="kpi-grid compact" id="profit-kpis"></div>
+            <div class="split profit-visuals">
+              <section class="panel">
+                <div class="panel-head profit-trend-head">
+                  <div><h3>&#x5F53;&#x6708;&#x76C8;&#x5229;&#x8D8B;&#x52BF;</h3><span id="profit-chart-note">&#x6309;SKU&#x6C47;&#x603B;&#x5C55;&#x793A;&#x4ECA;&#x65E5;&#x76C8;&#x4E8F;(US)</span></div>
+                  <div class="segmented-toggle" id="profit-chart-toggle" aria-label="profit chart mode">
+                    <button type="button" data-mode="summary" class="active">&#x6C47;&#x603B;</button>
+                    <button type="button" data-mode="detail">&#x660E;&#x7EC6;</button>
+                  </div>
+                </div>
+                <div id="profit-chart" class="chart-area trend-chart"></div>
+              </section>
+              <section class="panel">
+                <div class="panel-head"><h3>TOP10&#x76C8;&#x5229;SKU</h3><span>&#x6309;&#x76C8;&#x5229;&#x91D1;&#x989D;&#x6392;&#x5E8F;(US)</span></div>
+                <div id="profit-top-chart" class="chart-area trend-chart"></div>
+              </section>
+            </div>
+            <section class="panel full-width">
+              <div class="panel-head"><h3>&#x6BCF;&#x65E5;&#x76C8;&#x5229;&#x660E;&#x7EC6;</h3><span>&#x53CC;&#x51FB;&#x5355;&#x4EF6;&#x5229;&#x6DA6;&#x53EF;&#x624B;&#x52A8;&#x4FEE;&#x6B63;&#xFF1B;&#x603B;&#x8BA2;&#x5355;&#x91CF;&#x6765;&#x81EA;&#x5F53;&#x5929;&#x81EA;&#x7136;&#x9500;&#x91CF; + &#x5E7F;&#x544A;&#x9500;&#x91CF;</span></div>
+              <div class="table-wrap detail-table-wrap">
+                <table id="profit-table"></table>
+              </div>
+            </section>
+          </section>
+
+          <!-- 视图2：SKU明细 -->
+          <section id="ad-detail" class="view">
+            <div class="detail-toolbar">
+              <div class="sku-tabs" id="sku-tabs"></div>
+              <div class="month-tabs" id="detail-month-tabs"></div>
+            </div>
+            <section class="panel full-width">
+              <div class="table-wrap detail-table-wrap">
+                <table id="detail-table"></table>
+              </div>
+            </section>
+          </section>
+
+          <!-- 视图3：周报分析 -->
+          <section id="ad-weekly" class="view">
+            <div class="weekly-toolbar">
+              <div class="sku-tabs" id="weekly-sku-tabs"></div>
+              <div class="month-tabs" id="weekly-month-tabs"></div>
+            </div>
+            <div class="kpi-grid compact" id="weekly-kpis"></div>
+            <section class="panel">
+              <div class="panel-head"><h3>自然周汇总</h3><span>周销量=自然+广告 &middot; 周预算=花费总和 &middot; 周ACOS=预算/销售额</span></div>
+              <div class="table-wrap"><table id="weekly-table"></table></div>
+            </section>
+            <section class="panel">
+              <div class="panel-head"><h3>每日趋势</h3><span>曝光/点击/花费按天变化</span></div>
+              <div id="trend-chart" class="chart-area trend-chart"></div>
+            </section>
+          </section>
+
+          <!-- 视图4：数据管理 -->
+          <section id="ad-manage" class="view">
+            <div class="manage-actions">
+              <div class="action-card">
+                <h4>Excel导入</h4>
+                <p>从广告数据Excel文件导入到数据库</p>
+                <div class="import-row">
+                  <input type="text" id="import-path" placeholder="Excel文件路径" / value="D:\骞冲彴\缇庡澶?璺ㄥ\骞垮憡\2026.05缇庡澶氬箍鍛婃暟鎹?.xlsx">
+                  <button class="browse-btn" id="btn-browse" type="button">&#128194; 浏览</button>
+                </div>
+                <input type="file" id="import-file" accept=".xlsx,.xls" style="display:none" />
+                <button class="primary-btn" id="btn-import">导入数据</button>
+              </div>
+              <div class="action-card">
+                <h4>Excel导出</h4>
+                <p>导出指定月份的广告数据为Excel</p>
+                <select id="export-month"></select>
+                <button class="primary-btn" id="btn-export">导出数据</button>
+              </div>
+              <div class="action-card">
+                <h4>重算周汇总</h4>
+                <p>根据每日数据重新计算自然周汇总</p>
+                <select id="calc-month"></select>
+                <button class="primary-btn" id="btn-calc">重新计算</button>
+              </div>
+            </div>
+            <section class="panel">
+              <div class="panel-head"><h3>按型号查看导入数据</h3><span id="data-count">共 0 条记录</span></div>
+              <div class="detail-toolbar">
+                <div class="sku-tabs" id="manage-sku-tabs"></div>
+                <div class="month-tabs" id="manage-month-tabs"></div>
+              </div>
+              <div class="table-wrap detail-table-wrap"><table id="manage-table"></table></div>
+            </section>
+          </section>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Toast通知 -->
+  <div id="toast" class="toast hidden"></div>
+
+  <!-- 物流系统JS（不修改）-->
+  <script src="./app.js?v=202605110001"></script>
+  <!-- 统一适配层 -->
+  <script src="./erp.js?v=2026051903"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
