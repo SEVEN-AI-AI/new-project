@@ -174,9 +174,15 @@ async function apiPost(path, data) {
 
 async function apiPostForm(path, formData) {
   const res = await fetch(`${API}${path}`, { method: 'POST', body: formData });
-  const data = await res.json().catch(() => ({}));
+  const raw = await res.text().catch(() => '');
+  const data = raw ? (() => {
+    try { return JSON.parse(raw); } catch { return {}; }
+  })() : {};
   if (!res.ok || data.error) {
-    throw new Error(data.error || `服务器错误(${res.status})`);
+    if (res.status === 413) {
+      throw new Error('上传文件过大，服务器 nginx 需要调高 client_max_body_size');
+    }
+    throw new Error(data.error || `服务器错误(${res.status})${raw ? `: ${raw.slice(0, 120)}` : ''}`);
   }
   return data;
 }
