@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 美客多广告管理系统 - 前端逻辑
  * 视图切换、API调用、Dashboard、SKU明细、周报分析、数据管理
  */
@@ -146,6 +146,7 @@ const Utils = {
    API封装
    ═══════════════════════════════════════════════════════ */
 async function apiGet(path) {
+  if (isStaticApiPath(path)) return staticApiGet(path);
   try {
     const res = await fetch(`${API}${path}`);
     if (res.ok) return res.json();
@@ -153,6 +154,17 @@ async function apiGet(path) {
     // Static public deployment falls back to generated JSON files below.
   }
   return staticApiGet(path);
+}
+
+function isStaticApiPath(path) {
+  return [
+    '/ads',
+    '/ads/skus',
+    '/ads/months',
+    '/ad-records',
+    '/ad-records/stores',
+    '/ad-records/skus',
+  ].some(route => path === route || path.startsWith(`${route}?`));
 }
 
 async function staticApiGet(path) {
