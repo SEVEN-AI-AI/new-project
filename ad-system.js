@@ -146,8 +146,65 @@ const Utils = {
    API封装
    ═══════════════════════════════════════════════════════ */
 async function apiGet(path) {
-  const res = await fetch(`${API}${path}`);
-  return res.json();
+  try {
+    const res = await fetch(`${API}${path}`);
+    if (res.ok) return res.json();
+  } catch (e) {
+    // Static public deployment falls back to generated JSON files below.
+  }
+  return staticApiGet(path);
+}
+
+async function staticApiGet(path) {
+  const [route, queryString = ''] = path.split('?');
+  const params = new URLSearchParams(queryString);
+  const loadJson = async (file, fallback) => {
+    const res = await fetch(`./static-api/${file}?v=${Date.now()}`, { cache: 'no-store' });
+    if (!res.ok) return fallback;
+    return res.json();
+  };
+  if (route === '/ads') {
+    let data = await loadJson('ads.json', []);
+    const sku = params.get('sku');
+    const month = params.get('month');
+    if (sku) data = data.filter(r => r.sku === sku);
+    if (month) data = data.filter(r => r.year_month === month);
+    return data;
+  }
+  if (route === '/ads/skus') return loadJson('ads-skus.json', []);
+  if (route === '/ads/months') return loadJson('ads-months.json', []);
+  if (route === '/weekly') return [];
+  if (route === '/profit') return [];
+  if (route === '/ad-records') {
+    const data = await loadJson('ad-records.json', { records: [], summary: {} });
+    let records = data.records || [];
+    const start = params.get('start');
+    const end = params.get('end');
+    const sku = params.get('sku');
+    const store = params.get('store');
+    if (start) records = records.filter(r => r.date >= start);
+    if (end) records = records.filter(r => r.date <= end);
+    if (sku) records = records.filter(r => r.product_sku === sku);
+    if (store) records = records.filter(r => r.store === store);
+    return { records, summary: summarizeAdRecords(records) };
+  }
+  if (route === '/ad-records/stores') return loadJson('ad-records-stores.json', []);
+  if (route === '/ad-records/skus') return loadJson('ad-records-skus.json', []);
+  return [];
+}
+
+function summarizeAdRecords(records) {
+  const uniq = (field) => new Set(records.map(r => r[field]).filter(Boolean)).size;
+  return {
+    total_records: records.length,
+    days: uniq('date'),
+    skus: uniq('product_sku'),
+    total_impressions: Utils.sum(records, 'impressions'),
+    total_clicks: Utils.sum(records, 'clicks'),
+    total_spend: Utils.sum(records, 'spend'),
+    total_orders: Utils.sum(records, 'orders'),
+    total_sales: Utils.sum(records, 'sales'),
+  };
 }
 
 async function apiPut(path, data) {
