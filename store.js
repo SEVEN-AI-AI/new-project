@@ -294,7 +294,7 @@
       var box = $('#import-history-tbody');
       if (!rows.length) { box.innerHTML = '<tr><td colspan="7" class="empty-cell">暂无导入记录</td></tr>'; return; }
       box.innerHTML = rows.map(function (r) {
-        return '<tr><td>' + r.id + '</td><td>' + esc(r.import_time) + '</td><td>' + esc(r.source_file) + '</td>' +
+        return '<tr><td class="num">' + r.id + '</td><td>' + esc(r.import_time) + '</td><td>' + esc(r.source_file) + '</td>' +
           '<td class="num">' + fmtNum(r.record_count) + '</td><td>' + esc(r.date_from) + ' ~ ' + esc(r.date_to) + '</td>' +
           '<td>' + esc(r.status) + '</td><td class="title-cell">' + esc(r.note) + '</td></tr>';
       }).join('');

@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>店铺管理 · 美客多ERP</title>
-  <link rel="stylesheet" href="./styles.css?v=2026112410" />
-  <link rel="stylesheet" href="./ad-system.css?v=2026112410" />
-  <link rel="stylesheet" href="./store.css?v=2026112410" />
+  <link rel="stylesheet" href="./styles.css?v=2026112430" />
+  <link rel="stylesheet" href="./ad-system.css?v=2026112430" />
+  <link rel="stylesheet" href="./store.css?v=2026112430" />
 </head>
 <body class="ad-module store-module">
   <div class="shell">
@@ -86,7 +86,7 @@
             <div class="panel-head"><h3>指标明细</h3><span>当前周期 vs 对比周期</span></div>
             <div class="table-wrap dash-table-wrap">
               <table class="dash-table">
-                <thead><tr><th>指标</th><th>当前</th><th id="compare-col-title">上期</th><th>变化</th></tr></thead>
+                <thead><tr><th>指标</th><th class="num">当前</th><th class="num" id="compare-col-title">上期</th><th class="num">变化</th></tr></thead>
                 <tbody id="compare-tbody"><tr><td colspan="4" class="empty-cell">加载中...</td></tr></tbody>
               </table>
             </div>
@@ -129,7 +129,7 @@
             <div class="panel-head"><h3>每日订单明细</h3><span id="detail-count">--</span></div>
             <div class="table-wrap dash-table-wrap">
               <table class="dash-table">
-                <thead><tr><th>日期</th><th>SKU</th><th>商品名称</th><th>店铺</th><th>订单数</th><th>GMV ($)</th><th>客单价</th></tr></thead>
+                <thead><tr><th>日期</th><th>SKU</th><th>商品名称</th><th>店铺</th><th class="num">订单数</th><th class="num">GMV ($)</th><th class="num">客单价</th></tr></thead>
                 <tbody id="order-detail-tbody"><tr><td colspan="7" class="empty-cell">加载中...</td></tr></tbody>
               </table>
             </div>
@@ -177,7 +177,7 @@
             <div class="panel-head"><h3>导入历史</h3><span>最近 50 批次</span></div>
             <div class="table-wrap dash-table-wrap">
               <table class="dash-table">
-                <thead><tr><th>ID</th><th>导入时间</th><th>文件名</th><th>记录数</th><th>日期范围</th><th>状态</th><th>备注</th></tr></thead>
+                <thead><tr><th class="num">ID</th><th>导入时间</th><th>文件名</th><th class="num">记录数</th><th>日期范围</th><th>状态</th><th>备注</th></tr></thead>
                 <tbody id="import-history-tbody"><tr><td colspan="7" class="empty-cell">加载中...</td></tr></tbody>
               </table>
             </div>
@@ -188,6 +188,6 @@
   </div>
 
   <div id="toast" class="toast hidden"></div>
-  <script src="./store.js?v=2026112410"></script>
+  <script src="./store.js?v=2026112430"></script>
 </body>
 </html>

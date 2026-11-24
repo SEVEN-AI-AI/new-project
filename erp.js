@@ -67,8 +67,11 @@
           switchView('ad-dashboard');
         } else if (groupName === 'logistics') {
           switchView('dashboard');
+        } else if (groupName === 'store') {
+          // 店铺管理：点分组标题直接进入店铺看板（无需再点子项）
+          window.location.href = './store.html';
+          return;
         }
-        // 店铺管理分组：页面导航由 a 标签处理，这里只负责展开/折叠
 
         // 点击时：如果已展开则折叠，如果已折叠则展开并激活第一个子项
         if (isCollapsed) {

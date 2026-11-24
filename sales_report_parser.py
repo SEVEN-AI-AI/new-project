@@ -165,27 +165,40 @@ def parse_workbook(file_path):
     return all_records, {"sheets": sheet_info, "total_rows": len(all_records)}
 
 
-def aggregate_by_sku(records):
-    """把订单明细按 (日期, SKU) 汇总成入库记录。orders 取销量合计，gmv 取收入合计。"""
+def aggregate_by_sku(records, target_date=None):
+    """
+    把订单明细按 SKU 汇总（忽略原始日期差异），同一 SKU 的订单数与 GMV 全部合并。
+    target_date: 归集到的日期，默认取报表中的最新日期。
+    返回入库记录，每条对应一个 SKU。
+    """
+    if target_date is None:
+        # 归集到报表主日期（最新日期），跨度日期的旧订单一并合并进来
+        target_date = max((r.get("date", "") for r in records), default="")
     buckets = {}
     for r in records:
-        key = (r["date"], r["sku"])
-        b = buckets.setdefault(key, {
-            "date": r["date"], "sku": r["sku"], "system_sku": "",
+        sku = r["sku"]
+        b = buckets.setdefault(sku, {
+            "date": target_date, "sku": sku, "system_sku": "",
             "product_name": r.get("product_name", ""),
             "orders": 0, "gmv": 0.0, "net": 0.0,
             "order_ids": set(), "source": "sales_report",
+            "dates": set(),
         })
         b["orders"] += int(r.get("qty") or 1)
         b["gmv"] += float(r.get("gmv") or 0)
         b["net"] += float(r.get("net") or 0)
         if r.get("order_id"):
             b["order_ids"].add(r["order_id"])
+        if r.get("date"):
+            b["dates"].add(r["date"])
     out = []
     for b in buckets.values():
         b["gmv"] = round(b["gmv"], 2)
         b["net"] = round(b["net"], 2)
-        b["raw_json"] = {"order_ids": sorted(b.pop("order_ids"))[:500],
-                         "net_usd": b["net"]}
+        b["raw_json"] = {
+            "order_ids": sorted(b.pop("order_ids"))[:500],
+            "net_usd": b["net"],
+            "source_dates": sorted(b.pop("dates")),
+        }
         out.append(b)
     return out
