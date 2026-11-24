@@ -51,6 +51,37 @@ def init_dashboard_tables(db_path):
         CREATE INDEX IF NOT EXISTS idx_sku_orders_date ON sku_orders(date);
         CREATE INDEX IF NOT EXISTS idx_sku_orders_sku ON sku_orders(sku);
 
+        /* 广告数据表：服务器新库可能缺失，此处兜底创建，避免总览接口 500 */
+        CREATE TABLE IF NOT EXISTS imports (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            import_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            record_count INTEGER DEFAULT 0,
+            status TEXT DEFAULT 'success',
+            note TEXT DEFAULT ''
+        );
+        CREATE TABLE IF NOT EXISTS ad_records (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            import_id INTEGER NOT NULL,
+            date TEXT NOT NULL,
+            site TEXT DEFAULT '',
+            store TEXT DEFAULT '',
+            campaign TEXT DEFAULT '',
+            ad_group TEXT DEFAULT '',
+            product_sku TEXT DEFAULT '',
+            product_name TEXT DEFAULT '',
+            keyword TEXT DEFAULT '',
+            ad_type TEXT DEFAULT '',
+            impressions INTEGER DEFAULT 0,
+            clicks INTEGER DEFAULT 0,
+            spend REAL DEFAULT 0,
+            orders INTEGER DEFAULT 0,
+            sales REAL DEFAULT 0,
+            raw_json TEXT DEFAULT '',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE INDEX IF NOT EXISTS idx_ad_records_sku ON ad_records(product_sku);
+        CREATE INDEX IF NOT EXISTS idx_ad_records_date ON ad_records(date);
+
         CREATE TABLE IF NOT EXISTS order_imports (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             import_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
