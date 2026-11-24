@@ -97,22 +97,32 @@
         <section id="store-orders" class="view">
           <section class="panel dash-filter-panel">
             <div class="dash-filter-row">
+              <div class="filter-group"><label for="order-store-filter">店铺</label><select id="order-store-filter"><option value="">全部店铺</option></select></div>
+              <div class="filter-group"><label for="order-date">日期</label><input id="order-date" type="date" /></div>
               <div class="filter-group"><label for="order-sku-filter">SKU 筛选</label><select id="order-sku-filter"><option value="">全部 SKU</option></select></div>
-              <div class="filter-group">
-                <label for="order-days">时间范围</label>
+              <div class="filter-group" id="order-days-group">
+                <label for="order-days">时间范围（选 SKU 后生效）</label>
                 <select id="order-days">
                   <option value="7">近 7 天</option><option value="14">近 14 天</option>
                   <option value="30" selected>近 30 天</option><option value="90">近 90 天</option>
                 </select>
               </div>
               <div class="filter-group"><label for="order-metric">图表指标</label><select id="order-metric"><option value="orders" selected>订单数</option><option value="gmv">GMV ($)</option></select></div>
+              <div class="filter-group">
+                <label>展示方式</label>
+                <div class="seg" id="order-view-seg">
+                  <button type="button" class="seg-btn active" data-viewmode="chart">图表</button>
+                  <button type="button" class="seg-btn" data-viewmode="list">列表</button>
+                </div>
+              </div>
             </div>
             <div class="dash-filter-note" id="order-summary">--</div>
           </section>
 
           <section class="panel">
-            <div class="panel-head"><h3>每日订单柱状图</h3><span>横轴=日期，鼠标悬停查看明细</span></div>
+            <div class="panel-head"><h3 id="order-chart-title">当日各 SKU 订单</h3><span id="order-chart-hint">横轴=SKU，鼠标悬停查看型号 / 订单数 / GMV</span></div>
             <div class="dash-chart" id="order-chart"></div>
+            <div class="dash-table-wrap hidden" id="order-list"></div>
           </section>
 
           <section class="panel">
@@ -138,7 +148,11 @@
               </div>
               <div class="import-card">
                 <h4>② 上传报表</h4>
-                <p>直接上传后台「销售额」xlsx，自动识别表头并按日期+SKU 汇总</p>
+                <p>先选归属店铺，再上传后台「销售额」xlsx，自动识别表头并按日期+SKU 汇总</p>
+                <label class="import-store-row" for="import-store">
+                  <span>归属店铺</span>
+                  <select id="import-store"><option value="">跨境1店</option></select>
+                </label>
                 <input type="file" id="import-file" accept=".xlsx,.xlsm" hidden />
                 <button class="primary-btn" type="button" id="btn-import">选择文件并导入</button>
               </div>

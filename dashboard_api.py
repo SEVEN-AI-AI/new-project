@@ -205,6 +205,7 @@ def import_file():
         if not detail:
             return jsonify({"ok": False, "error": "未解析到订单数据", "meta": parse_meta}), 400
         records = srp.aggregate_by_sku(detail)
+        imp_store = _norm_store(request.form.get("store"))
         # 复用入库逻辑
         conn = _db()
         date_from = min(r["date"] for r in records)
@@ -223,7 +224,7 @@ def import_file():
                     raw_json = excluded.raw_json,
                     updated_at = CURRENT_TIMESTAMP
             """, (
-                rec["date"], _norm_store(request.form.get("store")),
+                rec["date"], imp_store,
                 rec["sku"], rec.get("system_sku", ""), rec.get("product_name", ""),
                 int(rec["orders"]), float(rec["gmv"]), "sales_report",
                 json.dumps(rec.get("raw_json", {}), ensure_ascii=False),
@@ -233,7 +234,7 @@ def import_file():
                 (source_file, record_count, date_from, date_to, status, note)
             VALUES (?, ?, ?, ?, 'success', ?)
         """, (file.filename[:200], len(records), date_from, date_to,
-              "明细 %d 行 → SKU 汇总 %d 条" % (parse_meta["total_rows"], len(records))))
+              "店铺 %s · 明细 %d 行 → SKU 汇总 %d 条" % (imp_store, parse_meta["total_rows"], len(records))))
         conn.commit()
 
         # 直接返回当日汇总，前端可立即展示
@@ -531,6 +532,88 @@ def order_history():
             "orders": sum(x["orders"] for x in daily),
             "gmv": round(sum(x["gmv"] for x in daily), 2),
             "days": len(daily),
+        },
+    })
+
+
+@dashboard_bp.route("/order-chart", methods=["GET"])
+def order_chart():
+    """订单柱状图/列表数据。
+    未筛选 SKU：指定日期当天所有 SKU 的订单数/GMV（横轴=SKU）；
+    筛选 SKU  ：该 SKU 近 N 天每日订单数/GMV（横轴=日期）。
+    同时返回明细表数据，供「图表/列表」切换共用。
+    """
+    store = request.args.get("store", "").strip()
+    sku = request.args.get("sku", "").strip()
+    try:
+        days = min(max(int(request.args.get("days", 30) or 30), 1), 180)
+    except (ValueError, TypeError):
+        days = 30
+    date_str = request.args.get("date", "").strip()
+    conn = _db()
+    if not date_str:
+        r = conn.execute("SELECT MAX(date) AS d FROM sku_orders").fetchone()
+        date_str = r["d"] if r and r["d"] else datetime.now().strftime("%Y-%m-%d")
+
+    se, sp = _store_expr(), _store_params()
+    try:
+        anchor = datetime.strptime(date_str, "%Y-%m-%d").date()
+    except (ValueError, TypeError):
+        anchor = datetime.now().date()
+        date_str = anchor.isoformat()
+
+    if sku:
+        axis = "date"
+        start = anchor - timedelta(days=days - 1)
+        end = anchor
+        where = ["date >= ?", "date <= ?", "sku = ?"]
+        params = [start.isoformat(), end.isoformat(), sku]
+        group_by = "date"
+        order_by = "date"
+    else:
+        axis = "sku"
+        start = end = anchor
+        where = ["date = ?"]
+        params = [date_str]
+        group_by = "sku"
+        order_by = "gmv DESC, orders DESC"
+    if store:
+        where.append("%s = ?" % se)
+        params.extend(sp + [store])
+    wsql = " AND ".join(where)
+
+    bar_rows = conn.execute("""
+        SELECT %s AS label, date, sku, MAX(product_name) AS product_name,
+               SUM(orders) AS orders, SUM(gmv) AS gmv
+        FROM sku_orders WHERE %s
+        GROUP BY %s ORDER BY %s
+    """ % ("date" if axis == "date" else "sku", wsql, group_by, order_by),
+        params).fetchall()
+
+    detail_rows = conn.execute("""
+        SELECT date, %s AS store, sku, product_name,
+               SUM(orders) AS orders, SUM(gmv) AS gmv
+        FROM sku_orders WHERE %s
+        GROUP BY %s ORDER BY %s
+    """ % (se, wsql, "date, sku" if axis == "date" else "sku",
+           "date DESC, gmv DESC" if axis == "date" else "gmv DESC, orders DESC"),
+        sp + params).fetchall()
+
+    bars = [{"label": x["label"], "date": x["date"], "sku": x["sku"],
+             "product_name": x["product_name"],
+             "orders": int(x["orders"] or 0), "gmv": round(float(x["gmv"] or 0), 2)}
+            for x in bar_rows]
+    details = [dict(x) for x in detail_rows]
+    conn.close()
+    return jsonify({
+        "axis": axis, "sku": sku, "store": store, "date": date_str,
+        "start": start.isoformat(), "end": end.isoformat(),
+        "bars": bars, "details": details,
+        "summary": {
+            "orders": sum(x["orders"] for x in bars),
+            "gmv": round(sum(x["gmv"] for x in bars), 2),
+            "skus": len(set(x["sku"] for x in bars)),
+            "days": len(bars) if axis == "date" else 1,
         },
     })
 

@@ -6,6 +6,7 @@
   var state = {
     meta: { stores: [], skus: [], dates: [], latest_date: '' },
     store: '', date: '', period: 'day', compare: 'mom',
+    orderDate: '', orderViewMode: 'chart',
     currentView: 'store-overview',
     loaded: {},
   };
@@ -84,6 +85,28 @@
         }).join('');
         sf.value = cur;
       }
+      // 订单明细：店铺 / 日期（与总览店铺联动）
+      var os = $('#order-store-filter');
+      if (os) {
+        os.innerHTML = '<option value="">全部店铺</option>' + (m.stores || []).map(function (x) {
+          return '<option value="' + esc(x) + '">' + esc(x) + '</option>';
+        }).join('');
+        os.value = state.store;
+      }
+      var od = $('#order-date');
+      if (od && !state.orderDate) state.orderDate = m.latest_date || new Date().toISOString().slice(0, 10);
+      if (od) od.value = state.orderDate;
+      // 导入页：归属店铺（默认跨境1店）
+      var ims = $('#import-store');
+      if (ims) {
+        var stores = (m.stores || []).slice();
+        if (stores.indexOf('跨境1店') < 0) stores.unshift('跨境1店');
+        var keep = ims.value || '跨境1店';
+        ims.innerHTML = stores.map(function (x) {
+          return '<option value="' + esc(x) + '">' + esc(x) + '</option>';
+        }).join('');
+        ims.value = keep;
+      }
       return m;
     });
   }
@@ -158,13 +181,28 @@
   function loadOrders() {
     var sku = ($('#order-sku-filter') || {}).value || '';
     var days = ($('#order-days') || {}).value || '30';
-    var p = ['days=' + days];
+    var p = ['days=' + days, 'date=' + encodeURIComponent(state.orderDate || state.date || '')];
     if (sku) p.push('sku=' + encodeURIComponent(sku));
     if (state.store) p.push('store=' + encodeURIComponent(state.store));
-    fetchJson(API + '/order-history?' + p.join('&')).then(function (d) {
-      $('#order-summary').textContent = '统计范围 ' + d.start + ' ~ ' + d.end + ' · 共 ' + fmtNum(d.summary.days) + ' 天 · ' +
-        fmtNum(d.summary.orders) + ' 单 · ' + fmtMoney(d.summary.gmv) + (sku ? ' · 当前 SKU：' + sku : ' · 全部 SKU');
-      renderOrderChart(d);
+    fetchJson(API + '/order-chart?' + p.join('&')).then(function (d) {
+      var bySku = d.axis === 'sku';
+      $('#order-chart-title').textContent = bySku
+        ? ('当日各 SKU 订单 · ' + d.date)
+        : (sku + ' 每日订单 · 近 ' + days + ' 天');
+      $('#order-chart-hint').textContent = '横轴=' + (bySku ? 'SKU' : '日期') + '，鼠标悬停查看型号 / 订单数量 / GMV';
+      $('#order-summary').textContent = (bySku ? '日期 ' + d.date : '统计范围 ' + d.start + ' ~ ' + d.end) +
+        ' · ' + fmtNum(d.summary.skus) + ' 个 SKU · ' + fmtNum(d.summary.orders) + ' 单 · ' + fmtMoney(d.summary.gmv) +
+        (sku ? ' · 当前 SKU：' + sku : ' · 全部 SKU') + (state.store ? ' · 店铺：' + state.store : ' · 全部店铺');
+      if (state.orderViewMode === 'list') {
+        renderOrderList(d);
+        $('#order-chart').classList.add('hidden');
+        $('#order-list').classList.remove('hidden');
+      } else {
+        renderOrderChart(d);
+        $('#order-chart').classList.remove('hidden');
+        $('#order-list').classList.add('hidden');
+      }
+      // 底部明细表
       var rows = d.details || [];
       $('#detail-count').textContent = fmtNum(rows.length) + ' 条记录';
       var box = $('#order-detail-tbody');
@@ -180,14 +218,14 @@
   }
 
   function renderOrderChart(d) {
-    var pts = d.daily || [];
+    var bars = d.bars || [];
     var metric = ($('#order-metric') || {}).value || 'orders';
     var box = $('#order-chart');
-    if (!pts.length) { box.innerHTML = '<div class="empty-cell">暂无订单数据，请先在「订单明细导入」上传报表</div>'; return; }
-    var W = 1200, H = 300, padL = 60, padR = 24, padT = 20, padB = 60;
+    if (!bars.length) { box.innerHTML = '<div class="empty-cell">暂无订单数据，请先在「订单明细导入」上传报表</div>'; return; }
+    var W = 1200, H = 320, padL = 62, padR = 24, padT = 26, padB = 78;
     var iw = W - padL - padR, ih = H - padT - padB;
-    var maxV = Math.max.apply(null, pts.map(function (p) { return Number(p[metric]) || 0; }).concat([1]));
-    var slot = iw / pts.length, bw = Math.max(5, Math.min(44, slot * 0.62));
+    var maxV = Math.max.apply(null, bars.map(function (p) { return Number(p[metric]) || 0; }).concat([1]));
+    var slot = iw / bars.length, bw = Math.max(5, Math.min(46, slot * 0.62));
     var y = function (v) { return padT + ih - (v / maxV) * ih; };
     var isGmv = metric === 'gmv';
     var parts = ['<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">'];
@@ -196,16 +234,40 @@
       parts.push('<line class="chart-grid-line" x1="' + padL + '" y1="' + gy + '" x2="' + (W - padR) + '" y2="' + gy + '"/>');
       parts.push('<text class="chart-label" x="' + (padL - 8) + '" y="' + (gy + 4) + '" text-anchor="end">' + (isGmv ? '$' : '') + fmtNum(maxV / 4 * i, 0) + '</text>');
     }
-    pts.forEach(function (p, idx) {
+    var step = bars.length > 16 ? Math.ceil(bars.length / 12) : 1;
+    bars.forEach(function (p, idx) {
       var v = Number(p[metric]) || 0, cx = padL + slot * idx + slot / 2, bh = Math.max(0, v / maxV * ih);
-      var tip = p.date + ' · ' + fmtNum(p.orders) + ' 单 · GMV ' + fmtMoney(p.gmv) + ' · ' + fmtNum(p.skus) + ' SKU';
-      parts.push('<rect class="chart-bar" x="' + (cx - bw / 2) + '" y="' + y(v) + '" width="' + bw + '" height="' + bh + '" rx="3"><title>' + tip + '</title></rect>');
+      var tipObj = { sku: p.sku || '-', name: p.product_name || '', date: p.date, orders: p.orders, gmv: p.gmv };
+      var tipText = '型号：' + tipObj.sku + ' · 订单数量：' + fmtNum(p.orders) + ' · GMV：' + fmtMoney(p.gmv);
+      parts.push('<rect class="chart-bar" x="' + (cx - bw / 2) + '" y="' + y(v) + '" width="' + bw + '" height="' + bh + '" rx="3"' +
+        ' data-tip="' + esc(JSON.stringify(tipObj)) + '"><title>' + esc(tipText) + '</title></rect>');
       if (v > 0) parts.push('<text class="chart-label" x="' + cx + '" y="' + (y(v) - 6) + '" text-anchor="middle">' + (isGmv ? '$' : '') + fmtNum(v, 0) + '</text>');
-      var step = pts.length > 20 ? Math.ceil(pts.length / 12) : 1;
-      if (idx % step === 0 || idx === pts.length - 1) parts.push('<text class="chart-label" x="' + cx + '" y="' + (H - 22) + '" text-anchor="middle">' + p.date.slice(5) + '</text>');
+      var raw = String(p.label || '');
+      var lab = raw.length > 11 ? raw.slice(0, 10) + '\u2026' : raw;
+      if (idx % step === 0 || idx === bars.length - 1) {
+        parts.push('<text class="chart-label" x="' + cx + '" y="' + (H - 26) + '" text-anchor="middle">' + esc(lab) + '</text>');
+      }
     });
     parts.push('</svg>');
     box.innerHTML = parts.join('');
+  }
+
+  function renderOrderList(d) {
+    var bars = d.bars || [], box = $('#order-list');
+    if (!bars.length) { box.innerHTML = '<div class="empty-cell">暂无订单数据</div>'; return; }
+    var bySku = d.axis === 'sku';
+    var head = bySku
+      ? '<tr><th>型号(SKU)</th><th>商品名称</th><th class="num">订单数量</th><th class="num">GMV ($)</th><th class="num">客单价</th></tr>'
+      : '<tr><th>日期</th><th>型号(SKU)</th><th>商品名称</th><th class="num">订单数量</th><th class="num">GMV ($)</th><th class="num">客单价</th></tr>';
+    var rows = bars.map(function (p) {
+      var o = parseInt(p.orders) || 0, g = parseFloat(p.gmv) || 0;
+      var lead = bySku
+        ? '<td class="sku-cell">' + esc(p.sku) + '</td><td class="title-cell" title="' + esc(p.product_name) + '">' + esc(p.product_name) + '</td>'
+        : '<td>' + esc(p.date) + '</td><td class="sku-cell">' + esc(p.sku) + '</td><td class="title-cell" title="' + esc(p.product_name) + '">' + esc(p.product_name) + '</td>';
+      return '<tr>' + lead + '<td class="num">' + fmtNum(o) + '</td><td class="num">' + fmtMoney(g) +
+        '</td><td class="num">' + (o > 0 ? fmtMoney(g / o) : '--') + '</td></tr>';
+    }).join('');
+    box.innerHTML = '<table class="dash-table"><thead>' + head + '</thead><tbody>' + rows + '</tbody></table>';
   }
 
   // ── 模块3：导入 ──
@@ -264,12 +326,46 @@
     $('#dash-date').addEventListener('change', function () { state.date = this.value; loadOverview(); });
     $('#dash-store').addEventListener('change', function () {
       state.store = this.value;
+      var os = $('#order-store-filter'); if (os) os.value = state.store;
       if (state.currentView === 'store-overview') loadOverview();
       else if (state.currentView === 'store-orders') loadOrders();
     });
+    $('#order-store-filter').addEventListener('change', function () {
+      state.store = this.value;
+      var ds = $('#dash-store'); if (ds) ds.value = state.store;
+      loadOrders();
+    });
+    $('#order-date').addEventListener('change', function () { state.orderDate = this.value; loadOrders(); });
     $('#order-sku-filter').addEventListener('change', loadOrders);
     $('#order-days').addEventListener('change', loadOrders);
     $('#order-metric').addEventListener('change', loadOrders);
+    $$('#order-view-seg .seg-btn').forEach(function (b) {
+      b.addEventListener('click', function () {
+        $$('#order-view-seg .seg-btn').forEach(function (x) { x.classList.remove('active'); });
+        b.classList.add('active'); state.orderViewMode = b.dataset.viewmode; loadOrders();
+      });
+    });
+    // 柱状图悬浮提示
+    var tip = document.createElement('div');
+    tip.className = 'chart-tooltip hidden'; document.body.appendChild(tip);
+    $('#order-chart').addEventListener('mousemove', function (e) {
+      var t = e.target;
+      if (!t || t.tagName.toLowerCase() !== 'rect' || !t.classList.contains('chart-bar')) {
+        tip.classList.add('hidden'); return;
+      }
+      var raw = t.getAttribute('data-tip'); if (!raw) { tip.classList.add('hidden'); return; }
+      try {
+        var info = JSON.parse(raw);
+        tip.innerHTML = '<div><b>型号：' + esc(info.sku) + '</b></div>' +
+          (info.name ? '<div>商品：' + esc(info.name) + '</div>' : '') +
+          '<div>订单数量：' + fmtNum(info.orders) + '</div>' +
+          '<div>GMV：' + fmtMoney(info.gmv) + '</div>';
+        tip.classList.remove('hidden');
+        tip.style.left = Math.min(e.clientX + 16, window.innerWidth - 240) + 'px';
+        tip.style.top = Math.max(e.clientY - 12, 8) + 'px';
+      } catch (err) { tip.classList.add('hidden'); }
+    });
+    $('#order-chart').addEventListener('mouseleave', function () { tip.classList.add('hidden'); });
     $('#dash-refresh').addEventListener('click', function () { refreshAll(); toast('已刷新'); });
 
     var fileInput = $('#import-file');
@@ -277,11 +373,13 @@
     fileInput.addEventListener('change', function () {
       var f = fileInput.files && fileInput.files[0]; if (!f) return;
       var fd = new FormData(); fd.append('file', f);
+      var impStore = ($('#import-store') || {}).value || '';
+      if (impStore) fd.append('store', impStore);
       var log = $('#import-log');
       log.innerHTML = '<div>正在解析 ' + esc(f.name) + ' ...</div>';
       fetch(API + '/import-file', { method: 'POST', body: fd }).then(function (r) { return r.json(); }).then(function (res) {
         if (!res.ok) { log.innerHTML = '<div class="log-err">导入失败：' + esc(res.error) + '</div>'; toast('导入失败：' + res.error, true); return; }
-        log.innerHTML = '<div class="log-ok">✓ 导入成功：' + esc(f.name) + ' · 明细 ' + res.detail_rows + ' 行 → SKU 汇总 ' + res.imported + ' 条 · 日期 ' + res.date_from + ' ~ ' + res.date_to + '</div>' +
+        log.innerHTML = '<div class="log-ok">✓ 导入成功：' + esc(f.name) + ' · 店铺 ' + esc(impStore || '跨境1店') + ' · 明细 ' + res.detail_rows + ' 行 → SKU 汇总 ' + res.imported + ' 条 · 日期 ' + res.date_from + ' ~ ' + res.date_to + '</div>' +
           '<div>最新日汇总：' + fmtNum(res.summary.orders) + ' 单 / ' + fmtMoney(res.summary.gmv) + ' / ' + fmtNum(res.summary.skus) + ' 个SKU</div>';
         toast('导入成功，已自动汇总');
         loadImportMeta(); loadHistory(); state.loaded = {};
