@@ -21,6 +21,19 @@ EXCEL_DIR = BASE_DIR
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False  # 支持中文JSON响应
 
+STORE_CANONICAL = "\u8de8\u58831\u5e97"
+STORE_ALIASES = (STORE_CANONICAL, "\uc69c\uc4f11\ub4e6")
+SKU_MAPPINGS_SEED = [
+    ("MV007", "MLM5030505458"),
+    ("D001", "MLM4560815120"),
+    ("D005", "MLM2631870293"),
+    ("D007", "MLM2631845007"),
+    ("MM048", "MLM2631821343"),
+    ("MM122", "MLM2631821429"),
+    ("PM002", "MLM2631936287"),
+    ("PM091", "MLM2631795439"),
+]
+
 
 # ── 数据库工具 ────────────────────────────────────────────
 def get_db():
@@ -93,6 +106,31 @@ def init_db():
             UNIQUE(sku, date)
         );
 
+
+        CREATE TABLE IF NOT EXISTS sku_mappings (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            store TEXT NOT NULL,
+            product_model TEXT NOT NULL,
+            system_sku TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(store, system_sku)
+        );
+
+        CREATE TABLE IF NOT EXISTS store_daily_metrics (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            store TEXT NOT NULL,
+            date TEXT NOT NULL,
+            visits INTEGER DEFAULT 0,
+            carts INTEGER DEFAULT 0,
+            orders INTEGER DEFAULT 0,
+            total_sales INTEGER DEFAULT 0,
+            total_revenue_usd REAL DEFAULT 0,
+            raw_json TEXT DEFAULT '{}',
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(store, date)
+        );
+
         CREATE TABLE IF NOT EXISTS ad_table_columns (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             product_model TEXT NOT NULL,
@@ -121,12 +159,25 @@ def init_db():
             ON ad_weekly_summary(sku, year_month);
         CREATE INDEX IF NOT EXISTS idx_ad_table_rows_product_month
             ON ad_table_rows(product_model, year_month);
+        CREATE INDEX IF NOT EXISTS idx_store_metrics_store_date
+            ON store_daily_metrics(store, date);
     """)
 
     conn.execute("""
         INSERT OR IGNORE INTO ad_months (year_month, label)
         SELECT DISTINCT year_month, year_month FROM ad_daily_data
     """)
+
+    for store in STORE_ALIASES:
+        for product_model, system_sku in SKU_MAPPINGS_SEED:
+            conn.execute("""
+                INSERT INTO sku_mappings (store, product_model, system_sku, updated_at)
+                VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+                ON CONFLICT(store, system_sku) DO UPDATE SET
+                    product_model = excluded.product_model,
+                    updated_at = CURRENT_TIMESTAMP
+            """, (store, product_model, system_sku))
+            conn.execute("INSERT OR IGNORE INTO ad_products (product_model) VALUES (?)", (product_model,))
     conn.commit()
     conn.close()
     print(f"[DB] 数据库已初始化: {DB_PATH}")
@@ -516,17 +567,28 @@ def get_ads():
     month = request.args.get('month', '')
 
     conn = get_db()
-    query = "SELECT * FROM ad_daily_data WHERE 1=1"
-    params = []
+    query = """
+        SELECT d.*,
+               COALESCE((
+                   SELECT m.store
+                   FROM sku_mappings m
+                   WHERE m.product_model = d.sku
+                   ORDER BY CASE WHEN m.store = ? THEN 0 ELSE 1 END, m.store
+                   LIMIT 1
+               ), ?) AS store
+        FROM ad_daily_data d
+        WHERE 1=1
+    """
+    params = [STORE_CANONICAL, STORE_CANONICAL]
 
     if sku:
-        query += " AND sku = ?"
+        query += " AND d.sku = ?"
         params.append(sku)
     if month:
-        query += " AND year_month = ?"
+        query += " AND d.year_month = ?"
         params.append(month)
 
-    query += " ORDER BY sku, date"
+    query += " ORDER BY d.sku, d.date"
 
     rows = conn.execute(query, params).fetchall()
     conn.close()
@@ -1084,7 +1146,225 @@ def export_excel():
     return send_file(filepath, as_attachment=True, download_name=filename)
 
 
+# ── API: 单品广告诊断（ad_records）────────────────────────
+
+
+
+@app.route('/api/store-metrics', methods=['GET'])
+def get_store_metrics():
+    store = request.args.get('store', '').strip()
+    month = request.args.get('month', '').strip()
+    start_date = request.args.get('start', '').strip()
+    end_date = request.args.get('end', '').strip()
+
+    conn = get_db()
+    query = """
+        SELECT store, date, visits, carts, orders, total_sales,
+               total_revenue_usd, raw_json, updated_at
+        FROM store_daily_metrics
+        WHERE 1=1
+    """
+    params = []
+    if store:
+        query += " AND store = ?"
+        params.append(store)
+    if month:
+        query += " AND substr(date, 1, 7) = ?"
+        params.append(month)
+    if start_date:
+        query += " AND date >= ?"
+        params.append(start_date)
+    if end_date:
+        query += " AND date <= ?"
+        params.append(end_date)
+    query += " ORDER BY date DESC, store"
+    rows = conn.execute(query, params).fetchall()
+    conn.close()
+    return jsonify([dict(r) for r in rows])
+
+
+@app.route('/api/store-metrics', methods=['POST'])
+def upsert_store_metrics():
+    data = request.get_json() or {}
+    records = data.get('records') if isinstance(data.get('records'), list) else [data]
+    conn = get_db()
+    count = 0
+    for rec in records:
+        store = str(rec.get('store') or STORE_CANONICAL).strip()
+        date_norm = normalize_date(rec.get('date', ''))
+        if not store or not date_norm:
+            continue
+        raw_json = rec.get('raw_json', rec)
+        conn.execute("""
+            INSERT INTO store_daily_metrics
+                (store, date, visits, carts, orders, total_sales, total_revenue_usd, raw_json, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            ON CONFLICT(store, date) DO UPDATE SET
+                visits = excluded.visits,
+                carts = excluded.carts,
+                orders = excluded.orders,
+                total_sales = excluded.total_sales,
+                total_revenue_usd = excluded.total_revenue_usd,
+                raw_json = excluded.raw_json,
+                updated_at = CURRENT_TIMESTAMP
+        """, (
+            store,
+            date_norm,
+            int(float(rec.get('visits') or 0)),
+            int(float(rec.get('carts') or 0)),
+            int(float(rec.get('orders') or 0)),
+            int(float(rec.get('total_sales') or 0)),
+            float(rec.get('total_revenue_usd') or 0),
+            json.dumps(raw_json, ensure_ascii=False),
+        ))
+        count += 1
+    conn.commit()
+    conn.close()
+    return jsonify({'ok': True, 'count': count})
+
+@app.route('/api/ad-records', methods=['GET'])
+def get_ad_records():
+    """????????????? ?date=&store=&sku= ???"""
+    date_filter = request.args.get('date', '').strip()
+    store = request.args.get('store', '').strip()
+    sku = request.args.get('sku', '').strip()
+    start_date = request.args.get('start', '').strip()
+    end_date = request.args.get('end', '').strip()
+
+    conn = get_db()
+    store_expr = "CASE WHEN r.store IN (?, ?) THEN ? ELSE r.store END"
+    sku_expr = "COALESCE(m.product_model, r.product_sku)"
+    select_params = [STORE_CANONICAL, STORE_ALIASES[1], STORE_CANONICAL]
+    base_params = list(STORE_ALIASES)
+    where = []
+    where_params = []
+
+    if date_filter:
+        where.append("r.date = ?")
+        where_params.append(date_filter)
+    if start_date:
+        where.append("r.date >= ?")
+        where_params.append(start_date)
+    if end_date:
+        where.append("r.date <= ?")
+        where_params.append(end_date)
+    if store:
+        where.append(f"{store_expr} = ?")
+        where_params.extend(select_params)
+        where_params.append(store)
+    if sku:
+        where.append(f"{sku_expr} = ?")
+        where_params.append(sku)
+
+    where_sql = (" AND " + " AND ".join(where)) if where else ""
+    join_sql = """
+        LEFT JOIN sku_mappings m
+          ON m.store IN (?, ?) AND m.system_sku = r.product_sku
+    """
+
+    query = f"""
+        SELECT r.id,
+               r.import_id,
+               r.date,
+               r.site,
+               {store_expr} AS store,
+               r.campaign,
+               r.ad_group,
+               {sku_expr} AS product_sku,
+               r.product_sku AS system_sku,
+               COALESCE(m.product_model, r.product_name, r.product_sku) AS product_name,
+               r.keyword,
+               r.ad_type,
+               r.impressions,
+               r.clicks,
+               r.spend,
+               r.orders,
+               r.sales,
+               r.raw_json,
+               r.created_at,
+               i.status as import_status,
+               i.note as import_note
+        FROM ad_records r
+        LEFT JOIN imports i ON r.import_id = i.id
+        {join_sql}
+        WHERE 1=1 {where_sql}
+        ORDER BY r.date DESC, r.id
+    """
+    rows = conn.execute(query, select_params + base_params + where_params).fetchall()
+
+    summary_query = f"""
+        SELECT
+            COUNT(*) as total_records,
+            COUNT(DISTINCT r.date) as days,
+            COUNT(DISTINCT {sku_expr}) as skus,
+            SUM(r.impressions) as total_impressions,
+            SUM(r.clicks) as total_clicks,
+            SUM(r.spend) as total_spend,
+            SUM(r.orders) as total_orders,
+            SUM(r.sales) as total_sales
+        FROM ad_records r
+        LEFT JOIN imports i ON r.import_id = i.id
+        {join_sql}
+        WHERE 1=1 {where_sql}
+    """
+    summary_row = conn.execute(summary_query, base_params + where_params).fetchone()
+    conn.close()
+
+    return jsonify({
+        'records': [dict(r) for r in rows],
+        'summary': dict(summary_row) if summary_row else {}
+    })
+
+
+@app.route('/api/ad-records/stores', methods=['GET'])
+def get_ad_record_stores():
+    """?? ad_records ????????"""
+    conn = get_db()
+    rows = conn.execute("""
+        SELECT DISTINCT CASE WHEN store IN (?, ?) THEN ? ELSE store END AS store
+        FROM ad_records
+        WHERE store <> ''
+        ORDER BY store
+    """, (STORE_CANONICAL, STORE_ALIASES[1], STORE_CANONICAL)).fetchall()
+    conn.close()
+    return jsonify([r['store'] for r in rows])
+
+
+@app.route('/api/ad-records/skus', methods=['GET'])
+def get_ad_record_skus():
+    """?? ad_records ????? SKU ???"""
+    conn = get_db()
+    rows = conn.execute("""
+        SELECT DISTINCT COALESCE(m.product_model, r.product_sku) AS product_sku
+        FROM ad_records r
+        LEFT JOIN sku_mappings m
+          ON m.store IN (?, ?) AND m.system_sku = r.product_sku
+        WHERE r.product_sku <> '' AND UPPER(r.product_sku) <> 'CHECKBOX'
+        ORDER BY product_sku
+    """, STORE_ALIASES).fetchall()
+    conn.close()
+    return jsonify([r['product_sku'] for r in rows])
+
+
+@app.route('/api/ad-records/dates', methods=['GET'])
+def get_ad_record_dates():
+    """获取 ad_records 中所有日期列表"""
+    conn = get_db()
+    rows = conn.execute("SELECT DISTINCT date FROM ad_records ORDER BY date DESC").fetchall()
+    conn.close()
+    return jsonify([r['date'] for r in rows])
+
+
 # ── 启动 ──────────────────────────────────────────────────
+
+# ── 店铺数据看板（独立蓝图，不影响原有广告功能） ──────────
+try:
+    from dashboard_api import register_dashboard_api
+    register_dashboard_api(app, DB_PATH)
+    print("[dashboard] 店铺数据看板 API 已注册: /api/dashboard/*")
+except Exception as _dash_err:
+    print("[dashboard] 注册失败:", _dash_err)
+
 
 if __name__ == '__main__':
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)

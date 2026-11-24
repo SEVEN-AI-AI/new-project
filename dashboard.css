@@ -1,0 +1,107 @@
+/* 店铺数据看板 - 独立样式，沿用 ERP 变量 */
+.dash-page { background: var(--bg, #f6f9fd); }
+.dash-header { display: flex; align-items: center; justify-content: space-between; }
+.dash-brand { display: flex; align-items: center; gap: 12px; }
+.dash-brand h1 { font-size: 18px; margin: 0; color: var(--text, #1e293b); }
+.dash-brand p { font-size: 12px; margin: 2px 0 0; color: var(--muted, #64748b); }
+.dash-header .ghost-btn { text-decoration: none; }
+
+.dash-main { display: grid; gap: 18px; padding: 22px 26px 60px; max-width: 1600px; margin: 0 auto; }
+
+/* 筛选栏 */
+.dash-filter-panel { padding: 16px 20px; }
+.dash-filter-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 18px; }
+.filter-group { display: grid; gap: 6px; }
+.filter-group label { font-size: 12px; color: var(--muted, #64748b); font-weight: 600; }
+.filter-group input[type="date"], .filter-group select {
+  height: 36px; padding: 0 10px; border: 1px solid var(--line, #e2e8f0);
+  border-radius: 8px; background: var(--panel, #fff); color: var(--text, #1e293b); font-size: 13px;
+}
+.seg { display: inline-flex; border: 1px solid var(--line, #e2e8f0); border-radius: 8px; overflow: hidden; height: 36px; }
+.seg-btn {
+  border: 0; background: var(--panel, #fff); color: var(--muted, #64748b);
+  padding: 0 16px; font-size: 13px; cursor: pointer; border-right: 1px solid var(--line, #e2e8f0);
+}
+.seg-btn:last-child { border-right: 0; }
+.seg-btn.active { background: var(--ad-brand, #7c3aed); color: #fff; font-weight: 600; }
+.dash-filter-note { margin-top: 12px; font-size: 12px; color: var(--muted, #64748b); }
+
+/* KPI */
+.dash-kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; }
+.dash-kpi-grid .kpi { border: 1px solid var(--line, #e2e8f0); border-radius: 12px; padding: 16px; background: var(--panel, #fff); position: relative; overflow: hidden; }
+.dash-kpi-grid .kpi::before { content: ''; position: absolute; left: 0; top: 0; width: 3px; height: 100%; background: var(--ad-brand, #7c3aed); opacity: .8; }
+.dash-kpi-grid .kpi .kpi-copy > span { font-size: 12px; color: var(--muted, #64748b); display: block; }
+.dash-kpi-grid .kpi .kpi-copy > strong { font-size: 25px; color: var(--text, #1e293b); display: block; margin-top: 4px; }
+.dash-kpi-grid .kpi small { display: block; margin-top: 6px; font-size: 12px; color: var(--muted, #64748b); }
+.dash-kpi-grid.compact .kpi { padding: 12px 14px; }
+.dash-kpi-grid.compact .kpi .kpi-copy > strong { font-size: 20px; }
+
+.delta-up { color: #dc2626 !important; font-weight: 600; }
+.delta-down { color: #16a34a !important; font-weight: 600; }
+.delta-flat { color: var(--muted, #64748b) !important; }
+
+/* 图表 */
+.dash-chart { width: 100%; min-height: 240px; padding: 10px 0; }
+.dash-chart svg { width: 100%; height: auto; display: block; }
+.chart-grid-line { stroke: var(--line, #e2e8f0); stroke-width: 1; }
+.chart-label { fill: var(--muted, #64748b); font-size: 11px; }
+.chart-bar { fill: var(--ad-brand, #7c3aed); opacity: .85; }
+.chart-bar-hover { fill: #2563eb; }
+.chart-line { fill: none; stroke: #f59e0b; stroke-width: 2; }
+.chart-dot { fill: #f59e0b; }
+.chart-legend { display: flex; gap: 18px; font-size: 12px; color: var(--muted, #64748b); margin-bottom: 8px; }
+.legend-swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+
+/* 工具栏 */
+.dash-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 12px 0; }
+.dash-toolbar input[type="search"], .dash-toolbar select {
+  height: 34px; padding: 0 10px; border: 1px solid var(--line, #e2e8f0);
+  border-radius: 8px; background: var(--panel, #fff); color: var(--text, #1e293b); font-size: 13px;
+}
+.dash-toolbar input[type="search"] { min-width: 240px; }
+.dash-hint { font-size: 12px; color: var(--muted, #64748b); margin-left: auto; }
+
+/* 表格 */
+.dash-table-wrap { overflow-x: auto; }
+.dash-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 900px; }
+.dash-table th { text-align: left; padding: 10px 12px; background: var(--bg, #f8fafc); color: var(--muted, #64748b); font-weight: 600; border-bottom: 1px solid var(--line, #e2e8f0); white-space: nowrap; }
+.dash-table td { padding: 10px 12px; border-bottom: 1px solid var(--line, #e2e8f0); color: var(--text, #1e293b); }
+.dash-table tbody tr { cursor: pointer; }
+.dash-table tbody tr:hover { background: var(--ad-brand-soft, #f5f3ff); }
+.dash-table tbody tr.selected { background: #ede9fe; }
+.dash-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.dash-table .sku-cell { font-weight: 700; color: var(--ad-brand, #7c3aed); }
+.dash-table .title-cell { max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted, #64748b); }
+.empty-cell { text-align: center; color: var(--muted, #64748b); padding: 32px !important; }
+.sku-tag { display: inline-block; padding: 2px 8px; border-radius: 6px; background: var(--ad-brand-soft, #f5f3ff); color: var(--ad-brand, #7c3aed); font-size: 12px; margin-left: 6px; }
+
+/* 导入区 */
+.import-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin-top: 10px; }
+.import-card { border: 1px dashed var(--line, #e2e8f0); border-radius: 12px; padding: 16px; display: grid; gap: 8px; align-content: start; }
+.import-card h4 { margin: 0; font-size: 14px; color: var(--text, #1e293b); }
+.import-card p { margin: 0; font-size: 12px; color: var(--muted, #64748b); line-height: 1.6; min-height: 38px; }
+.import-card .primary-btn, .import-card .ghost-btn { justify-self: start; }
+.import-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.ghost-btn.danger { color: #dc2626; border-color: #fecaca; }
+.import-log { margin-top: 14px; font-size: 12px; color: var(--muted, #64748b); max-height: 140px; overflow-y: auto; }
+.import-log .log-ok { color: #16a34a; }
+.import-log .log-err { color: #dc2626; }
+
+@media (max-width: 900px) {
+  .dash-main { padding: 14px; }
+  .dash-filter-row { gap: 12px; }
+  .dash-hint { margin-left: 0; }
+}
+
+/* ── 店铺模块内导航 ─────────────────────────────── */
+.module-nav {
+  display: flex; gap: 6px; flex-wrap: wrap;
+  background: var(--panel, #fff); border: 1px solid var(--line, #e2e8f0);
+  border-radius: 10px; padding: 6px;
+}
+.module-nav a {
+  padding: 8px 18px; border-radius: 7px; text-decoration: none;
+  font-size: 13px; color: var(--muted, #64748b); font-weight: 600;
+}
+.module-nav a:hover { background: var(--ad-brand-soft, #f5f3ff); color: var(--ad-brand, #7c3aed); }
+.module-nav a.active { background: var(--ad-brand, #7c3aed); color: #fff; }

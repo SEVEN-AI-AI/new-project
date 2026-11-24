@@ -58,6 +58,23 @@
               </button>
             </div>
           </div>
+          <div class="nav-group" data-group="store">
+            <button class="nav-group-toggle" data-group="store">
+              <span class="nav-group-arrow">&#9656;</span>
+              <span class="nav-group-text">店铺管理</span>
+            </button>
+            <div class="nav-group-items collapsed">
+              <a class="nav-btn" href="./store-overview.html" style="text-decoration:none">
+                <span class="nav-icon">&#128202;</span> 整体店铺数据
+              </a>
+              <a class="nav-btn" href="./sku-orders.html" style="text-decoration:none">
+                <span class="nav-icon">&#128203;</span> 订单明细
+              </a>
+              <a class="nav-btn" href="./data-import.html" style="text-decoration:none">
+                <span class="nav-icon">&#128229;</span> 订单明细导入
+              </a>
+            </div>
+          </div>
           <div class="nav-group" data-group="ads">
             <button class="nav-group-toggle" data-group="ads">
               <span class="nav-group-arrow">&#9656;</span>
@@ -300,15 +317,47 @@
             </section>
           </section>
 
-          <!-- 视图2：SKU明细 -->
+          <!-- 视图2：单品广告诊断（API同步数据） -->
           <section id="ad-detail" class="view">
-            <div class="detail-toolbar">
-              <div class="sku-tabs" id="sku-tabs"></div>
-              <div class="month-tabs" id="detail-month-tabs"></div>
-            </div>
+            <div class="kpi-grid compact" id="ad-detail-kpis"></div>
             <section class="panel full-width">
+              <div class="panel-head"><h3>单品广告明细</h3><span>来自 Mercado Ads API 同步数据 &middot; 点击表头可排序</span></div>
+              <!-- 筛选工具栏 -->
+              <div class="detail-toolbar" id="adr-toolbar">
+                <select id="adr-filter-store" aria-label="店铺筛选">
+                  <option value="">全部店铺</option>
+                </select>
+                <select id="adr-filter-sku" aria-label="SKU筛选">
+                  <option value="">全部SKU</option>
+                </select>
+                <input id="adr-filter-start" type="date" aria-label="开始日期" />
+                <input id="adr-filter-end" type="date" aria-label="结束日期" />
+                <button class="ghost-btn" id="adr-reset-filter" type="button">重置</button>
+                <span id="adr-record-count" style="color:var(--muted);margin-left:auto;font-size:13px"></span>
+              </div>
               <div class="table-wrap detail-table-wrap">
-                <table id="detail-table"></table>
+                <table id="ad-records-table">
+                  <thead>
+                    <tr>
+                      <th data-sort="date">日期 &#8595;</th>
+                      <th data-sort="site">站点</th>
+                      <th data-sort="store">店铺</th>
+                      <th data-sort="product_sku">SKU</th>
+                      <th>商品名称</th>
+                      <th data-sort="impressions">曝光</th>
+                      <th data-sort="clicks">点击</th>
+                      <th>CTR</th>
+                      <th>CPC($)</th>
+                      <th data-sort="spend">花费($)</th>
+                      <th data-sort="orders">订单</th>
+                      <th data-sort="sales">销售额($)</th>
+                      <th>ACOS</th>
+                    </tr>
+                  </thead>
+                  <tbody id="ad-records-tbody">
+                    <tr><td colspan="13" style="text-align:center;color:var(--muted);padding:32px">加载中...</td></tr>
+                  </tbody>
+                </table>
               </div>
             </section>
           </section>
@@ -378,6 +427,170 @@
   <script src="./app.js?v=202605110001"></script>
   <!-- 统一适配层 -->
   <script src="./erp.js?v=2026051903"></script>
+  <!-- 单品广告诊断（ad_records）独立渲染 -->
+  <script>
+  (function() {
+    'use strict';
+    var API_BASE = '/api/ad-records';
+    var tbody = document.getElementById('ad-records-tbody');
+    var kpiBox = document.getElementById('ad-detail-kpis');
+    var countEl = document.getElementById('adr-record-count');
+    var fStore = document.getElementById('adr-filter-store');
+    var fSku = document.getElementById('adr-filter-sku');
+    var fStart = document.getElementById('adr-filter-start');
+    var fEnd = document.getElementById('adr-filter-end');
+    var resetBtn = document.getElementById('adr-reset-filter');
+
+    // 格式化
+    function fmt(n, d) { if(n==null||n==='') return '0'; var v=parseFloat(n); return isNaN(v)?'0':v.toFixed(d||2); }
+    function fmtInt(n) { if(n==null||n==='') return '0'; var v=parseInt(n); return isNaN(v)?'0':v.toLocaleString(); }
+    function fmtPct(a, b) { if(!b) return '0%'; return (a/b*100).toFixed(1)+'%'; }
+
+    // KPI 渲染
+    function renderKpis(s) {
+      if(!kpiBox) return;
+      var totalImp = parseInt(s.total_impressions)||0;
+      var totalClick = parseInt(s.total_clicks)||0;
+      var totalSpend = parseFloat(s.total_spend)||0;
+      var totalOrders = parseInt(s.total_orders)||0;
+      var totalSales = parseFloat(s.total_sales)||0;
+      var acos = totalSales > 0 ? totalSpend/totalSales : 0;
+      var cpc = totalClick > 0 ? totalSpend/totalClick : 0;
+      var ctr = totalImp > 0 ? totalClick/totalImp : 0;
+
+      kpiBox.innerHTML = [
+        '<div class="kpi"><div class="kpi-icon">&#x1F4CA;</div><div class="kpi-copy"><span>总曝光</span><strong>'+fmtInt(totalImp)+'</strong></div></div>',
+        '<div class="kpi"><div class="kpi-icon">&#x1F5B1;</div><div class="kpi-copy"><span>总点击</span><strong>'+fmtInt(totalClick)+'</strong><small>CTR '+fmtPct(totalClick,totalImp)+'</small></div></div>',
+        '<div class="kpi"><div class="kpi-icon">&#x1F4B0;</div><div class="kpi-copy"><span>总花费($)</span><strong>'+fmt(totalSpend)+'</strong><small>CPC $'+fmt(cpc)+'</small></div></div>',
+        '<div class="kpi"><div class="kpi-icon">&#x1F6D2;</div><div class="kpi-copy"><span>总订单</span><strong>'+fmtInt(totalOrders)+'</strong></div></div>',
+        '<div class="kpi"><div class="kpi-icon">&#x1F4B5;</div><div class="kpi-copy"><span>总销售额($)</span><strong>'+fmt(totalSales)+'</strong></div></div>',
+        '<div class="kpi acos-kpi"><div class="kpi-icon">&#x1F4C8;</div><div class="kpi-copy"><span>ACOS</span><strong>'+(acos<0.3?'':'class="danger"')+'>'+fmtPct(totalSpend,totalSales)+'</strong></div></div>',
+      ].join('');
+    }
+
+    // 表格渲染
+    function renderTable(records) {
+      if(!tbody) return;
+      if(countEl) countEl.textContent = records.length + ' 条记录';
+      if(!records.length) {
+        tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;color:var(--muted);padding:32px">暂无数据</td></tr>';
+        return;
+      }
+      tbody.innerHTML = records.map(function(r) {
+        var imp = parseInt(r.impressions)||0;
+        var clk = parseInt(r.clicks)||0;
+        var spend = parseFloat(r.spend)||0;
+        var orders = parseInt(r.orders)||0;
+        var sales = parseFloat(r.sales)||0;
+        return '<tr>'+
+          '<td>'+(r.date||'')+'</td>'+
+          '<td>'+(r.site||'')+'</td>'+
+          '<td>'+(r.store||'')+'</td>'+
+          '<td><b>'+(r.product_sku||'')+'</b></td>'+
+          '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(r.product_name||'')+'</td>'+
+          '<td>'+fmtInt(imp)+'</td>'+
+          '<td>'+fmtInt(clk)+'</td>'+
+          '<td>'+fmtPct(clk,imp)+'</td>'+
+          '<td>'+fmt(imp>0?spend/imp:0,3)+'</td>'+
+          '<td>'+fmt(spend)+'</td>'+
+          '<td>'+fmtInt(orders)+'</td>'+
+          '<td>'+fmt(sales)+'</td>'+
+          '<td>'+(sales>0?fmtPct(spend,sales):'-')+'</td>'+
+        '</tr>';
+      }).join('');
+    }
+
+    // 加载数据
+    function loadData() {
+      var params = [];
+      if(fStore && fStore.value) params.push('store='+encodeURIComponent(fStore.value));
+      if(fSku && fSku.value) params.push('sku='+encodeURIComponent(fSku.value));
+      if(fStart && fStart.value) params.push('start='+fStart.value);
+      if(fEnd && fEnd.value) params.push('end='+fEnd.value);
+      var url = API_BASE + (params.length?'?'+params.join('&'):'');
+
+      fetch(url).then(function(r){ return r.json(); }).then(function(res){
+        renderKpis(res.summary || {});
+        renderTable(res.records || []);
+      }).catch(function(e){
+        console.error('[ad-records] 加载失败:', e);
+        if(tbody) tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;color:#e74c3c;padding:32px">加载失败，请确认Flask服务正在运行</td></tr>';
+      });
+    }
+
+    // 填充筛选器选项
+    function loadFilters() {
+      fetch(API_BASE+'/stores').then(function(r){return r.json()}).then(function(list){
+        if(!fStore) return;
+        list.forEach(function(s){ var o=document.createElement('option'); o.value=s; o.textContent=s; fStore.appendChild(o); });
+      });
+      fetch(API_BASE+'/skus').then(function(r){return r.json()}).then(function(list){
+        if(!fSku) return;
+        list.forEach(function(s){ var o=document.createElement('option'); o.value=s; o.textContent=s; fSku.appendChild(o); });
+      });
+    }
+
+    // 筛选事件
+    function bindFilters() {
+      [fStore, fSku, fStart, fEnd].forEach(function(el){
+        if(el) el.addEventListener('change', loadData);
+        if(el && el.type==='date') el.addEventListener('change', loadData);
+      });
+      if(resetBtn) resetBtn.addEventListener('click', function(){
+        if(fStore) fStore.value='';
+        if(fSku) fSku.value='';
+        if(fStart) fStart.value='';
+        if(fEnd) fEnd.value='';
+        loadData();
+      });
+
+      // 表头排序
+      var table = document.getElementById('ad-records-table');
+      if(table) table.querySelectorAll('th[data-sort]').forEach(function(th){
+        th.style.cursor='pointer';
+        th.addEventListener('click', function(){
+          var field = this.dataset.sort;
+          var asc = this.getAttribute('data-asc')!=='false';
+          // 更新所有表头箭头
+          table.querySelectorAll('th[data-sort]').forEach(function(h){ h.innerHTML=h.innerHTML.split(' ')[0]; });
+          this.innerHTML += asc ? ' &#8595;' : ' &#8593;';
+          this.setAttribute('data-asc', String(!asc));
+
+          var rows = Array.from(tbody.querySelectorAll('tr'));
+          rows.sort(function(a,b){
+            var va=a.cells[Array.from(th.parentNode.children).indexOf(th)-1].textContent;
+            var vb=b.cells[Array.from(th.parentNode.children).indexOf(th)-1].textContent;
+            // 数字排序
+            var na=parseFloat(va.replace(/,/g,'')), nb=parseFloat(vb.replace(/,/g,''));
+            if(!isNaN(na)&&!isNaN(nb)) return asc?na-nb:nb-na;
+            return asc?va.localeCompare(vb):vb.localeCompare(va);
+          });
+          rows.forEach(function(r){ tbody.appendChild(r); });
+        });
+      });
+    }
+
+    // 暴露全局加载函数（供 erp.js 切换视图时调用）
+    window.loadAdRecords = function() {
+      loadFilters();
+      bindFilters();
+      loadData();
+    };
+
+    // 当 DOM ready 且切换到 ad-detail 时自动加载
+    // 通过 MutationObserver 监听 view 激活
+    var detailSection = document.getElementById('ad-detail');
+    if(detailSection) {
+      var observer = new MutationObserver(function(){
+        if(detailSection.classList.contains('active') && !detailSection._loaded) {
+          detailSection._loaded = true;
+          window.loadAdRecords();
+        }
+      });
+      observer.observe(detailSection, { attributes: true, attributeFilter: ['class'] });
+    }
+  })();
+  </script>
 </body>
 </html>
 

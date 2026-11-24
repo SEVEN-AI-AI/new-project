@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>订单明细导入 · 美客多ERP</title>
+  <link rel="stylesheet" href="./styles.css?v=2026112403" />
+  <link rel="stylesheet" href="./dashboard.css?v=2026112403" />
+</head>
+<body class="dash-page">
+  <div class="shell">
+    <header class="app-header dash-header">
+      <div class="dash-brand">
+        <div class="brand-mark">D</div>
+        <div><h1>订单明细导入</h1><p>上传后台销售报表 · 自动汇总</p></div>
+      </div>
+      <div class="header-right">
+        <span class="header-time" id="dash-time"></span>
+        <a class="ghost-btn" href="./erp.html">返回 ERP</a>
+      </div>
+    </header>
+
+    <main class="main dash-main">
+      <nav class="module-nav">
+        <a href="./store-overview.html">整体店铺数据</a>
+        <a href="./sku-orders.html">订单明细</a>
+        <a href="./data-import.html" class="active">订单明细导入</a>
+      </nav>
+
+      <section class="panel">
+        <div class="panel-head"><h3>导入订单报表</h3><span>支持美客多后台导出的销售报表 .xlsx</span></div>
+        <div class="import-grid">
+          <div class="import-card">
+            <h4>① 下载模板</h4>
+            <p>按模板填写：日期、SKU、商品标题、销量、产品收入(USD)、订单号</p>
+            <button class="ghost-btn" type="button" id="btn-template">下载 CSV 模板</button>
+          </div>
+          <div class="import-card">
+            <h4>② 上传报表</h4>
+            <p>直接上传后台导出的「销售额」xlsx，自动识别表头并按日期+SKU 汇总</p>
+            <input type="file" id="import-file" accept=".xlsx,.xlsm" hidden />
+            <button class="primary-btn" type="button" id="btn-import">选择文件并导入</button>
+          </div>
+          <div class="import-card">
+            <h4>③ 演示数据</h4>
+            <p>用已有广告出单记录生成演示数据，可随时清除</p>
+            <div class="import-actions">
+              <button class="ghost-btn" type="button" id="btn-demo">生成演示数据</button>
+              <button class="ghost-btn danger" type="button" id="btn-clear-demo">清除演示数据</button>
+            </div>
+          </div>
+        </div>
+        <div class="import-log" id="import-log"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head"><h3>已导入数据概览</h3><span id="data-overview">--</span></div>
+        <div class="kpi-grid dash-kpi-grid compact" id="data-kpis"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head"><h3>导入历史</h3><span>最近 50 批次</span></div>
+        <div class="table-wrap dash-table-wrap">
+          <table class="dash-table" id="import-history-table">
+            <thead><tr><th>ID</th><th>导入时间</th><th>文件名</th><th>记录数</th><th>日期范围</th><th>状态</th><th>备注</th></tr></thead>
+            <tbody id="import-history-tbody"><tr><td colspan="7" class="empty-cell">加载中...</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+  <div id="toast" class="toast hidden"></div>
+  <script src="./dashboard-common.js?v=2026112403"></script>
+  <script src="./data-import.js?v=2026112403"></script>
+</body>
+</html>
