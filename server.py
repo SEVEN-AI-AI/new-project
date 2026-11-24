@@ -1369,7 +1369,7 @@ except Exception as _dash_err:
 if __name__ == '__main__':
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     init_db()
-    port = int(os.environ.get('PORT', '80'))
+    port = int(os.environ.get('PORT', '5000'))
     print("=" * 60)
     print("Mercado Libre Ads backend started")
     print(f"ERP: http://localhost:{port}")
