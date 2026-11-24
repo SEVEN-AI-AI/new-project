@@ -18,6 +18,11 @@
 
   var $ = function (s) { return document.querySelector(s); };
   var $$ = function (s) { return Array.prototype.slice.call(document.querySelectorAll(s)); };
+  // 安全绑定：元素不存在时静默跳过，避免中断后续所有事件绑定
+  function on(sel, evt, fn) {
+    var el = $(sel);
+    if (el) el.addEventListener(evt, fn);
+  }
 
   function fmtNum(n, d) {
     if (n === null || n === undefined || n === '') return '--';
@@ -323,22 +328,22 @@
         b.classList.add('active'); state.compare = b.dataset.compare; loadOverview();
       });
     });
-    $('#dash-date').addEventListener('change', function () { state.date = this.value; loadOverview(); });
-    $('#dash-store').addEventListener('change', function () {
+    on('#dash-date', 'change', function () { state.date = this.value; loadOverview(); });
+    on('#dash-store', 'change', function () {
       state.store = this.value;
       var os = $('#order-store-filter'); if (os) os.value = state.store;
       if (state.currentView === 'store-overview') loadOverview();
       else if (state.currentView === 'store-orders') loadOrders();
     });
-    $('#order-store-filter').addEventListener('change', function () {
+    on('#order-store-filter', 'change', function () {
       state.store = this.value;
       var ds = $('#dash-store'); if (ds) ds.value = state.store;
       loadOrders();
     });
-    $('#order-date').addEventListener('change', function () { state.orderDate = this.value; loadOrders(); });
-    $('#order-sku-filter').addEventListener('change', loadOrders);
-    $('#order-days').addEventListener('change', loadOrders);
-    $('#order-metric').addEventListener('change', loadOrders);
+    on('#order-date', 'change', function () { state.orderDate = this.value; loadOrders(); });
+    on('#order-sku-filter', 'change', loadOrders);
+    on('#order-days', 'change', loadOrders);
+    on('#order-metric', 'change', loadOrders);
     $$('#order-view-seg .seg-btn').forEach(function (b) {
       b.addEventListener('click', function () {
         $$('#order-view-seg .seg-btn').forEach(function (x) { x.classList.remove('active'); });
@@ -348,7 +353,7 @@
     // 柱状图悬浮提示
     var tip = document.createElement('div');
     tip.className = 'chart-tooltip hidden'; document.body.appendChild(tip);
-    $('#order-chart').addEventListener('mousemove', function (e) {
+    on('#order-chart', 'mousemove', function (e) {
       var t = e.target;
       if (!t || t.tagName.toLowerCase() !== 'rect' || !t.classList.contains('chart-bar')) {
         tip.classList.add('hidden'); return;
@@ -365,12 +370,12 @@
         tip.style.top = Math.max(e.clientY - 12, 8) + 'px';
       } catch (err) { tip.classList.add('hidden'); }
     });
-    $('#order-chart').addEventListener('mouseleave', function () { tip.classList.add('hidden'); });
-    $('#dash-refresh').addEventListener('click', function () { refreshAll(); toast('已刷新'); });
+    on('#order-chart', 'mouseleave', function () { tip.classList.add('hidden'); });
+    on('#dash-refresh', 'click', function () { refreshAll(); toast('已刷新'); });
 
     var fileInput = $('#import-file');
-    $('#btn-import').addEventListener('click', function () { fileInput.click(); });
-    fileInput.addEventListener('change', function () {
+    on('#btn-import', 'click', function () { if (fileInput) fileInput.click(); });
+    on('#import-file', 'change', function () {
       var f = fileInput.files && fileInput.files[0]; if (!f) return;
       var fd = new FormData(); fd.append('file', f);
       var impStore = ($('#import-store') || {}).value || '';
@@ -386,7 +391,7 @@
       }).catch(function (e) { log.innerHTML = '<div class="log-err">请求失败：' + esc(e.message) + '</div>'; toast('请求失败', true); });
       fileInput.value = '';
     });
-    $('#btn-template').addEventListener('click', function () {
+    on('#btn-template', 'click', function () {
       var csv = '\uFEFF日期,SKU,商品标题,销量,产品收入(USD),订单号\n' +
         '2026-11-23,KJC005,Large Dildo Realistic Brown,1,37.50,2000019742984844\n' +
         '2026-11-23,MM100,Muscular Sex Doll 3.8kg,1,69.00,2000019742510428\n';
@@ -394,13 +399,13 @@
       var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = '订单导入模板.csv'; a.click();
       URL.revokeObjectURL(a.href);
     });
-    $('#btn-demo').addEventListener('click', function () {
+    on('#btn-demo', 'click', function () {
       fetch(API + '/demo', { method: 'POST' }).then(function (r) { return r.json(); }).then(function (res) {
         toast(res.ok ? ('已生成 ' + res.count + ' 条演示数据') : '生成失败', !res.ok);
         if (res.ok) { loadImportMeta(); loadHistory(); state.loaded = {}; }
       });
     });
-    $('#btn-clear-demo').addEventListener('click', function () {
+    on('#btn-clear-demo', 'click', function () {
       if (!confirm('确定清除所有演示数据？导入的真实数据不会受影响。')) return;
       fetch(API + '/orders?source=demo', { method: 'DELETE' }).then(function (r) { return r.json(); }).then(function (res) {
         toast('已清除 ' + res.deleted + ' 条演示数据'); loadImportMeta(); loadHistory(); state.loaded = {};
