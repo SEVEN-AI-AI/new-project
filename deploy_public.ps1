@@ -1,6 +1,6 @@
 param(
   [string]$Message = "Publish site update",
-  [string[]]$Paths = @("ad-system.js", "erp.html", "erp.css", "erp.js", "app.js", "styles.css", "static-api", "deploy_public.ps1", "DEPLOY_WORKFLOW.md", "dashboard_api.py", "sales_report_parser.py", "dashboard-common.js", "dashboard.css", "dashboard.js", "dashboard.html", "store-overview.html", "store-overview.js", "sku-orders.html", "sku-orders.js", "data-import.html", "data-import.js", "server.py")
+  [string[]]$Paths = @("ad-system.js", "erp.html", "erp.css", "erp.js", "app.js", "styles.css", "static-api", "deploy_public.ps1", "DEPLOY_WORKFLOW.md", "dashboard_api.py", "sales_report_parser.py", "store.html", "store.css", "store.js", "dashboard.html", "dashboard.css", "server.py")
 )
 
 $ErrorActionPreference = "Stop"

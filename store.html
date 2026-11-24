@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>店铺管理 · 美客多ERP</title>
+  <link rel="stylesheet" href="./styles.css?v=2026112404" />
+  <link rel="stylesheet" href="./ad-system.css?v=2026112404" />
+  <link rel="stylesheet" href="./store.css?v=2026112404" />
+</head>
+<body class="ad-module store-module">
+  <div class="shell">
+    <header class="app-header">
+      <div class="header-right">
+        <span class="header-time" id="dash-time"></span>
+        <a class="ghost-btn" href="./erp.html" style="text-decoration:none">返回 ERP</a>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">S</div>
+          <div><h1>店铺管理</h1><p>经营总览 &middot; 订单明细 &middot; 数据导入</p></div>
+        </div>
+        <nav class="nav">
+          <button class="nav-btn store-nav-btn active" data-view="store-overview">
+            <span class="nav-icon">&#128202;</span> 整体店铺数据
+          </button>
+          <button class="nav-btn store-nav-btn" data-view="store-orders">
+            <span class="nav-icon">&#128203;</span> 订单明细
+          </button>
+          <button class="nav-btn store-nav-btn" data-view="store-import">
+            <span class="nav-icon">&#128229;</span> 订单明细导入
+          </button>
+        </nav>
+        <div class="sidebar-footer">
+          <button class="refresh-btn" type="button" id="dash-refresh">&#x21bb; 刷新数据</button>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="page-head">
+          <div>
+            <p class="eyebrow">Mercado Libre Store</p>
+            <div class="title-row"><h2 id="view-title">整体店铺数据</h2></div>
+          </div>
+        </header>
+
+        <!-- ═══ 视图1：整体店铺数据 ═══ -->
+        <section id="store-overview" class="view active">
+          <section class="panel dash-filter-panel">
+            <div class="dash-filter-row">
+              <div class="filter-group">
+                <label>统计周期</label>
+                <div class="seg" id="period-seg">
+                  <button type="button" class="seg-btn active" data-period="day">日</button>
+                  <button type="button" class="seg-btn" data-period="week">周</button>
+                  <button type="button" class="seg-btn" data-period="month">月</button>
+                </div>
+              </div>
+              <div class="filter-group"><label for="dash-date">日期</label><input id="dash-date" type="date" /></div>
+              <div class="filter-group"><label for="dash-store">店铺</label><select id="dash-store"><option value="">全部店铺</option></select></div>
+              <div class="filter-group">
+                <label>对比</label>
+                <div class="seg" id="compare-seg">
+                  <button type="button" class="seg-btn active" data-compare="mom">环比</button>
+                  <button type="button" class="seg-btn" data-compare="yoy">同比</button>
+                </div>
+              </div>
+            </div>
+            <div class="dash-filter-note">口径：GMV=SKU订单产品收入(USD)；ROI=GMV/广告花费；TACOS=广告花费/GMV</div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head"><h3>核心指标</h3><span id="overview-range">--</span></div>
+            <div class="kpi-grid dash-kpi-grid" id="overview-kpis"></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head"><h3>GMV / 广告花费趋势</h3><span>柱=GMV，线=广告花费</span></div>
+            <div class="dash-chart" id="overview-chart"></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head"><h3>指标明细</h3><span>当前周期 vs 对比周期</span></div>
+            <div class="table-wrap dash-table-wrap">
+              <table class="dash-table">
+                <thead><tr><th>指标</th><th>当前</th><th id="compare-col-title">上期</th><th>变化</th></tr></thead>
+                <tbody id="compare-tbody"><tr><td colspan="4" class="empty-cell">加载中...</td></tr></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <!-- ═══ 视图2：订单明细 ═══ -->
+        <section id="store-orders" class="view">
+          <section class="panel dash-filter-panel">
+            <div class="dash-filter-row">
+              <div class="filter-group"><label for="order-sku-filter">SKU 筛选</label><select id="order-sku-filter"><option value="">全部 SKU</option></select></div>
+              <div class="filter-group">
+                <label for="order-days">时间范围</label>
+                <select id="order-days">
+                  <option value="7">近 7 天</option><option value="14">近 14 天</option>
+                  <option value="30" selected>近 30 天</option><option value="90">近 90 天</option>
+                </select>
+              </div>
+              <div class="filter-group"><label for="order-metric">图表指标</label><select id="order-metric"><option value="orders" selected>订单数</option><option value="gmv">GMV ($)</option></select></div>
+            </div>
+            <div class="dash-filter-note" id="order-summary">--</div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head"><h3>每日订单柱状图</h3><span>横轴=日期，鼠标悬停查看明细</span></div>
+            <div class="dash-chart" id="order-chart"></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head"><h3>每日订单明细</h3><span id="detail-count">--</span></div>
+            <div class="table-wrap dash-table-wrap">
+              <table class="dash-table">
+                <thead><tr><th>日期</th><th>SKU</th><th>商品名称</th><th>店铺</th><th>订单数</th><th>GMV ($)</th><th>客单价</th></tr></thead>
+                <tbody id="order-detail-tbody"><tr><td colspan="7" class="empty-cell">加载中...</td></tr></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <!-- ═══ 视图3：订单明细导入 ═══ -->
+        <section id="store-import" class="view">
+          <section class="panel">
+            <div class="panel-head"><h3>导入订单报表</h3><span>支持美客多后台导出的销售报表 .xlsx</span></div>
+            <div class="import-grid">
+              <div class="import-card">
+                <h4>① 下载模板</h4>
+                <p>按模板填写：日期、SKU、商品标题、销量、产品收入(USD)、订单号</p>
+                <button class="ghost-btn" type="button" id="btn-template">下载 CSV 模板</button>
+              </div>
+              <div class="import-card">
+                <h4>② 上传报表</h4>
+                <p>直接上传后台「销售额」xlsx，自动识别表头并按日期+SKU 汇总</p>
+                <input type="file" id="import-file" accept=".xlsx,.xlsm" hidden />
+                <button class="primary-btn" type="button" id="btn-import">选择文件并导入</button>
+              </div>
+              <div class="import-card">
+                <h4>③ 演示数据</h4>
+                <p>用已有广告出单记录生成演示数据，可随时清除</p>
+                <div class="import-actions">
+                  <button class="ghost-btn" type="button" id="btn-demo">生成演示数据</button>
+                  <button class="ghost-btn danger" type="button" id="btn-clear-demo">清除演示数据</button>
+                </div>
+              </div>
+            </div>
+            <div class="import-log" id="import-log"></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head"><h3>已导入数据概览</h3><span id="data-overview">--</span></div>
+            <div class="kpi-grid dash-kpi-grid compact" id="data-kpis"></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head"><h3>导入历史</h3><span>最近 50 批次</span></div>
+            <div class="table-wrap dash-table-wrap">
+              <table class="dash-table">
+                <thead><tr><th>ID</th><th>导入时间</th><th>文件名</th><th>记录数</th><th>日期范围</th><th>状态</th><th>备注</th></tr></thead>
+                <tbody id="import-history-tbody"><tr><td colspan="7" class="empty-cell">加载中...</td></tr></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+  <script src="./store.js?v=2026112404"></script>
+</body>
+</html>
